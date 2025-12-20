@@ -1,0 +1,161 @@
+
+local ScreenGui = Instance.new("ScreenGui")
+local Frame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local PovCircle = Instance.new("Frame")
+local StatusLabel = Instance.new("TextLabel")
+
+ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Name = "BONHUB"
+
+Frame.Parent = ScreenGui
+Frame.Size = UDim2.new(0, 300, 0, 200)
+Frame.Position = UDim2.new(0.5, -150, 0.5, -100)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+Title.Parent = Frame
+Title.Text = "BON HUB - POV AIMBOT"
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
+
+PovCircle.Parent = ScreenGui
+PovCircle.Size = UDim2.new(0, 100, 0, 100)
+PovCircle.Position = UDim2.new(0.5, -50, 0.5, -50)
+PovCircle.BackgroundTransparency = 0.7
+PovCircle.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+PovCircle.BorderSizePixel = 2
+PovCircle.BorderColor3 = Color3.fromRGB(255, 255, 255)
+PovCircle.Visible = true
+
+local config = {
+    AimRadius = 100, -- 50 to 300
+    WallCheck = true,
+    SmoothAim = true,
+    AimKey = Enum.UserInputType.MouseButton2 -- Right click
+}
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+
+local function wallCheck(targetPosition)
+    if not config.WallCheck then return true end
+    
+    local origin = workspace.CurrentCamera.CFrame.Position
+    local direction = (targetPosition - origin).Unit
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+    raycastParams.FilterDescendantsInstances = {LocalPlayer.Character}
+    
+    local raycastResult = workspace:Raycast(origin, direction * 1000, raycastParams)
+    
+    if raycastResult then
+        local hitPlayer = Players:GetPlayerFromCharacter(raycastResult.Instance:FindFirstAncestorOfClass("Model"))
+        return hitPlayer ~= nil
+    end
+    return false
+end
+
+local function findTarget()
+    local nearestDistance = config.AimRadius
+    local nearestPlayer = nil
+    local nearestPart = nil
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+            local head = player.Character:FindFirstChild("Head")
+            
+            if humanoid and humanoid.Health > 0 and head then
+                local screenPoint, visible = workspace.CurrentCamera:WorldToViewportPoint(head.Position)
+                local distance = (Vector2.new(screenPoint.X, screenPoint.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+                
+                if distance < nearestDistance and visible then
+                    if wallCheck(head.Position) then
+                        nearestDistance = distance
+                        nearestPlayer = player
+                        nearestPart = head
+                    end
+                end
+            end
+        end
+    end
+    return nearestPlayer, nearestPart
+end
+
+local function updatePovCircle()
+    PovCircle.Size = UDim2.new(0, config.AimRadius * 2, 0, config.AimRadius * 2)
+    PovCircle.Position = UDim2.new(0.5, -config.AimRadius, 0.5, -config.AimRadius)
+end
+
+local aiming = false
+UserInputService.InputBegan:Connect(function(input)
+    if input.UserInputType == config.AimKey then
+        aiming = true
+        PovCircle.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == config.AimKey then
+        aiming = false
+        PovCircle.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    end
+end)
+
+local radiusSlider = Instance.new("TextLabel")
+radiusSlider.Parent = Frame
+radiusSlider.Text = "POV Radius: " .. config.AimRadius
+radiusSlider.Position = UDim2.new(0, 10, 0, 40)
+radiusSlider.Size = UDim2.new(1, -20, 0, 20)
+
+local slider = Instance.new("TextButton")
+slider.Parent = Frame
+slider.Text = "▲▼"
+slider.Position = UDim2.new(0, 10, 0, 65)
+slider.Size = UDim2.new(1, -20, 0, 30)
+
+slider.MouseButton1Down:Connect(function()
+    config.AimRadius = math.clamp(config.AimRadius + 10, 50, 300)
+    radiusSlider.Text = "POV Radius: " .. config.AimRadius
+    updatePovCircle()
+end)
+
+slider.MouseButton2Down:Connect(function()
+    config.AimRadius = math.clamp(config.AimRadius - 10, 50, 300)
+    radiusSlider.Text = "POV Radius: " .. config.AimRadius
+    updatePovCircle()
+end)
+
+local wallCheckToggle = Instance.new("TextButton")
+wallCheckToggle.Parent = Frame
+wallCheckToggle.Text = "Wall Check: " .. (config.WallCheck and "ON" or "OFF")
+wallCheckToggle.Position = UDim2.new(0, 10, 0, 100)
+wallCheckToggle.Size = UDim2.new(1, -20, 0, 30)
+
+wallCheckToggle.MouseButton1Click:Connect(function()
+    config.WallCheck = not config.WallCheck
+    wallCheckToggle.Text = "Wall Check: " .. (config.WallCheck and "ON" or "OFF")
+end)
+
+RunService.RenderStepped:Connect(function()
+    if aiming then
+        local targetPlayer, targetPart = findTarget()
+        if targetPart then
+            local camera = workspace.CurrentCamera
+            local targetPosition = targetPart.Position
+            
+            if config.SmoothAim then
+                local current = camera.CFrame
+                local target = CFrame.lookAt(camera.CFrame.Position, targetPosition)
+                camera.CFrame = current:Lerp(target, 0.3)
+            else
+                camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetPosition)
+            end
+        end
+    end
+end)
+
+updatePovCircle()
