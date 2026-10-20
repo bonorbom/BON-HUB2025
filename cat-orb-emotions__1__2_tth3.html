@@ -1,0 +1,3409 @@
+<!doctype html>
+<html lang="vi" style="--look-x: 2.69px; --look-y: 10.00px; --look-x-pixel: 2px; --look-y-pixel: 2px;"><head>
+  <script type="module" src="/@vite/client"></script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cat Orb Assistant Emotions</title>
+  <meta name="description" content="Trình diễn animation cảm xúc của trợ lý ảo quả cầu đen tai mèo với 2 phong cách Pixel và Smooth.">
+
+  <style>
+    /* ==========================================================================
+       1. CẤU HÌNH CƠ BẢN & GIAO DIỆN CHUNG (Base & Dark Theme)
+       Thiết kế tối giản, tone đen trầm, không màu mè AI thừa thãi.
+       ========================================================================== */
+    :root {
+      --bg-main: #0c0d10;
+      --bg-panel: #14161a;
+      --bg-card: #1a1d23;
+      --bg-btn: #22262e;
+      --bg-btn-hover: #2c313b;
+      --bg-btn-active: #383e4a;
+      --border-subtle: #282c35;
+      --border-accent: #4f5666;
+      --text-main: #f3f4f6;
+      --text-muted: #949ba8;
+      --accent-active: #ffffff;
+      --accent-badge: #3b82f6;
+      --look-x: 0px;
+      --look-y: 0px;
+      --look-x-pixel: 0px;
+      --look-y-pixel: 0px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      touch-action: manipulation;
+    }
+
+    /* Container chính chia 2 khu vực: Sân khấu (trên) & Bộ điều khiển (dưới) */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      width: 100%;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 12px 16px 24px;
+    }
+
+    /* Thanh tiêu đề & điều khiển trên cùng */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-title h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #fff;
+    }
+
+    .brand-badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background-color: #20242c;
+      color: #cbd5e1;
+      border: 1px solid var(--border-subtle);
+    }
+
+    /* Bộ nút chuyển đổi Nhân vật (Pixel / Smooth) */
+    .char-toggle-group {
+      display: flex;
+      background: #16181d;
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 4px;
+    }
+
+    .char-toggle-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background-color 150ms ease, color 150ms ease;
+    }
+
+    .char-toggle-btn.active {
+      background-color: #2b303a;
+      color: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+
+    /* SÂN KHẤU HIỂN THỊ NHÂN VẬT */
+    .stage-wrapper {
+      position: relative;
+      flex: 1;
+      min-height: 290px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 0;
+      cursor: crosshair;
+    }
+
+    .stage-background {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: radial-gradient(circle at 50% 50%, #15181f 0%, #0c0d10 75%);
+      border: 1px solid #1a1e26;
+      pointer-events: none;
+    }
+
+    /* Vòng hào quang nhẹ dưới chân orb */
+    .stage-shadow {
+      position: absolute;
+      bottom: 28px;
+      width: 140px;
+      height: 22px;
+      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      transition: transform 250ms ease;
+    }
+
+    /* Nhãn trạng thái đang kích hoạt */
+    .mood-indicator {
+      position: absolute;
+      top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      background: rgba(18, 20, 26, 0.8);
+      border: 1px solid var(--border-subtle);
+      padding: 4px 12px;
+      border-radius: 20px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .mood-indicator .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+
+    .mood-indicator .timer-bar {
+      width: 0%;
+      height: 2px;
+      background: #38bdf8;
+      position: absolute;
+      bottom: -1px;
+      left: 12px;
+      right: 12px;
+      border-radius: 2px;
+      transition: width 2.5s linear;
+    }
+
+    /* Chỉ dẫn tương tác */
+    .tracking-hint {
+      position: absolute;
+      bottom: 6px;
+      font-size: 0.72rem;
+      color: #64748b;
+      letter-spacing: 0.02em;
+      pointer-events: none;
+    }
+
+    /* Container bao bọc nhân vật */
+    .character-viewport {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+    }
+
+    /* Hai nhân vật chuyển đổi */
+    .char-instance {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .char-instance.visible {
+      display: flex;
+    }
+
+    /* ==========================================================================
+       2. NHÂN VẬT A: PIXEL ART (Theo ảnh 1)
+       - SVG lưới pixel, crispEdges
+       - Animation dùng steps() để giữ chất pixel 8-bit giòn giã
+       ========================================================================== */
+    #char-pixel svg {
+      width: 192px;
+      height: 192px;
+      shape-rendering: crispEdges;
+      image-rendering: pixelated;
+    }
+
+    /* Base transforms cho pixel */
+    #char-pixel .orb-core {
+      transform-origin: 16px 17px;
+      transition: transform 180ms steps(3);
+    }
+
+    #char-pixel .ears-group {
+      transform-origin: 16px 10px;
+      transition: transform 180ms steps(3);
+    }
+
+    #char-pixel .ear-left {
+      transform-origin: 9px 8px;
+      transition: transform 180ms steps(3);
+    }
+
+    #char-pixel .ear-right {
+      transform-origin: 23px 8px;
+      transition: transform 180ms steps(3);
+    }
+
+    /* Mắt Pixel: Chạy đúng nhịp 8 FPS, tuyệt đối không nội suy mượt giữa các frame */
+    #char-pixel .eye-tracker {
+      transform: translate(var(--look-x-pixel, 0px), var(--look-y-pixel, 0px));
+      transition: none !important; /* Không nội suy, giữ nguyên vị trí giữa 2 lần cập nhật */
+    }
+
+    #char-pixel .eye-left,
+    #char-pixel .eye-right {
+      transform-origin: center;
+      transition: transform 125ms steps(1), opacity 125ms steps(1); /* Cập nhật theo bước 125ms (8 FPS) */
+    }
+
+    /* Idle thở pixel */
+    @keyframes pixel-idle-breath {
+      0%, 100% { transform: translateY(0px) scale(1, 1); }
+      50% { transform: translateY(-1px) scale(1, 1.03); }
+    }
+
+    #char-pixel.mood-neutral .orb-core {
+      animation: pixel-idle-breath 3.2s infinite steps(4);
+    }
+
+    /* Chớp mắt pixel: Đóng mở đúng nhịp bước 8 FPS, không chuyển tiếp mượt */
+    #char-pixel.is-blinking .eye-left,
+    #char-pixel.is-blinking .eye-right {
+      transform: scaleY(0.18) translateY(2px) !important;
+      transition: none !important;
+    }
+
+
+    /* ==========================================================================
+       3. NHÂN VẬT B: SMOOTH VECTOR (Theo ảnh 2)
+       - SVG vector viền xám, gradient mềm, tai trắng bo tròn, mắt bầu dục trắng
+       - Chuyển động mượt mà với cubic-bezier & spring physics
+       - Viền ngoài có hiệu ứng bóng nước nhẹ: trễ hơn thân, méo nhẹ theo quán tính,
+         có vùng rim light xám sáng nhẹ sát mép trong.
+       ========================================================================== */
+    #char-smooth svg {
+      width: 210px;
+      height: 210px;
+    }
+
+    #char-smooth .orb-body {
+      transform-origin: 100px 108px;
+      transition: transform 260ms cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+
+    /* Lớp bóng nước riêng phía sau thân orb: Lệch tâm trễ và squash & stretch điều khiển bởi JS lò xo 120Hz */
+    #char-smooth .orb-rim-water {
+      transform-origin: 100px 108px;
+      pointer-events: none;
+      will-change: transform, filter;
+      filter: drop-shadow(0 0 3px rgba(120, 130, 150, calc(0.35 * var(--rim-brightness, 1)))) brightness(var(--rim-brightness, 1));
+      transition: filter 300ms ease;
+    }
+
+    /* Độ sáng viền bóng nước thay đổi nhẹ theo cảm xúc */
+    #char-smooth.mood-happy,
+    #char-smooth.mood-excited,
+    #char-smooth.mood-love {
+      --rim-brightness: 1.25;
+    }
+    #char-smooth.mood-sad,
+    #char-smooth.mood-sleepy,
+    #char-smooth.mood-scared {
+      --rim-brightness: 0.72;
+    }
+    #char-smooth.mood-annoyed {
+      --rim-brightness: 0.82;
+    }
+
+    #char-smooth .ears-group {
+      transform-origin: 100px 65px;
+      transition: transform 260ms cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+
+    #char-smooth .ear-left {
+      transform-origin: 75px 65px;
+      transition: transform 260ms cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+
+    #char-smooth .ear-right {
+      transform-origin: 125px 65px;
+      transition: transform 260ms cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+
+    #char-smooth .eye-tracker {
+      transform: translate(var(--look-x, 0px), var(--look-y, 0px));
+      transition: transform 90ms ease-out;
+    }
+
+    #char-smooth .smooth-eye {
+      transform-origin: center;
+      transition: transform 240ms cubic-bezier(0.34, 1.4, 0.64, 1), opacity 180ms ease;
+    }
+
+    /* Idle thở mượt */
+    @keyframes smooth-idle-breath {
+      0%, 100% { transform: translateY(0px) scale(1, 1); }
+      50% { transform: translateY(-4px) scale(1.02, 0.985); }
+    }
+
+    #char-smooth.mood-neutral .orb-body {
+      animation: smooth-idle-breath 3.6s infinite ease-in-out;
+    }
+
+    /* Chớp mắt smooth */
+    #char-smooth.is-blinking .smooth-eye {
+      transform: scaleY(0.08) translateY(3px) !important;
+    }
+
+
+    /* ==========================================================================
+       4. BỘ 18 CẢM XÚC (Đầy đủ cả 4 thành phần: Mắt, Tai, Thân, Phụ)
+       ========================================================================== */
+
+    /* Biểu tượng phụ (FX elements): mặc định ẩn */
+    .fx-item {
+      opacity: 0;
+      pointer-events: none;
+      transform-origin: center;
+    }
+
+    /* --- 1. NEUTRAL (Bình thường) --- */
+    .mood-neutral .fx-item { opacity: 0; }
+
+    /* --- 2. HAPPY (Vui vẻ) --- */
+    /* Mắt cười cong híp ^ ^ */
+    #char-smooth.mood-happy .smooth-eye-left {
+      transform: translateY(-2px) scaleY(0.4) rotate(15deg);
+      border-radius: 12px 12px 2px 2px;
+    }
+    #char-smooth.mood-happy .smooth-eye-right {
+      transform: translateY(-2px) scaleY(0.4) rotate(-15deg);
+      border-radius: 12px 12px 2px 2px;
+    }
+    #char-pixel.mood-happy .eye-left { transform: translateY(-1px) scaleY(0.4); }
+    #char-pixel.mood-happy .eye-right { transform: translateY(-1px) scaleY(0.4); }
+
+    /* Tai vểnh lắc vui */
+    #char-smooth.mood-happy .ear-left { transform: rotate(-8deg) translateY(-3px); }
+    #char-smooth.mood-happy .ear-right { transform: rotate(8deg) translateY(-3px); }
+    #char-pixel.mood-happy .ear-left { transform: rotate(-6deg); }
+    #char-pixel.mood-happy .ear-right { transform: rotate(6deg); }
+
+    /* Thân nhún nhảy */
+    @keyframes happy-bounce {
+      0%, 100% { transform: translateY(0px) scale(1, 1); }
+      50% { transform: translateY(-8px) scale(0.97, 1.05); }
+    }
+    #char-smooth.mood-happy .orb-body { animation: happy-bounce 0.8s infinite ease-in-out; }
+    #char-pixel.mood-happy .orb-core { animation: happy-bounce 0.8s infinite steps(3); }
+
+    /* Phụ: tia sáng lấp lánh ✦ */
+    .mood-happy .fx-sparkles {
+      opacity: 1;
+      animation: pulse-glow 1s infinite alternate ease-in-out;
+    }
+
+    /* --- 3. EXCITED (Phấn khích) --- */
+    /* Mắt to lấp lánh */
+    #char-smooth.mood-excited .smooth-eye { transform: scale(1.3, 1.25); }
+    #char-pixel.mood-excited .eye-left,
+    #char-pixel.mood-excited .eye-right { transform: scale(1.35, 1.25); }
+
+    /* Tai vểnh cao nảy mạnh */
+    #char-smooth.mood-excited .ear-left { transform: translateY(-6px) rotate(-14deg); }
+    #char-smooth.mood-excited .ear-right { transform: translateY(-6px) rotate(14deg); }
+    #char-pixel.mood-excited .ear-left { transform: translateY(-2px) rotate(-10deg); }
+    #char-pixel.mood-excited .ear-right { transform: translateY(-2px) rotate(10deg); }
+
+    /* Thân nhảy tưng tưng */
+    @keyframes excited-hop {
+      0%, 100% { transform: translateY(0) scale(1.04, 0.94); }
+      40% { transform: translateY(-16px) scale(0.94, 1.12); }
+      60% { transform: translateY(-12px) scale(0.98, 1.06); }
+    }
+    #char-smooth.mood-excited .orb-body { animation: excited-hop 0.55s infinite ease-in-out; }
+    #char-pixel.mood-excited .orb-core { animation: excited-hop 0.55s infinite steps(4); }
+
+    /* Phụ: năng lượng bừng sáng */
+    .mood-excited .fx-burst {
+      opacity: 1;
+      animation: spin-burst 2.5s infinite linear;
+    }
+
+    /* --- 4. SILLY (Ngốc nghếch) --- */
+    /* Mắt lé lệch */
+    #char-smooth.mood-silly .smooth-eye-left { transform: translate(-6px, 4px) scale(0.85); }
+    #char-smooth.mood-silly .smooth-eye-right { transform: translate(4px, -3px) scale(1.2); }
+    #char-pixel.mood-silly .eye-left { transform: translate(-2px, 1px) scale(0.8); }
+    #char-pixel.mood-silly .eye-right { transform: translate(1px, -1px) scale(1.2); }
+
+    /* Một tai cụp một tai vểnh */
+    #char-smooth.mood-silly .ear-left { transform: rotate(-25deg) translateY(4px); }
+    #char-smooth.mood-silly .ear-right { transform: rotate(18deg) translateY(-4px); }
+    #char-pixel.mood-silly .ear-left { transform: rotate(-20deg); }
+    #char-pixel.mood-silly .ear-right { transform: rotate(15deg); }
+
+    /* Thân nghiêng ngoẹo */
+    @keyframes silly-wobble {
+      0%, 100% { transform: rotate(12deg) translateY(0); }
+      50% { transform: rotate(7deg) translateY(3px); }
+    }
+    #char-smooth.mood-silly .orb-body { animation: silly-wobble 1.2s infinite ease-in-out; }
+    #char-pixel.mood-silly .orb-core { animation: silly-wobble 1.2s infinite steps(3); }
+
+    /* Phụ: chiếc lưỡi lè ra 👅 */
+    .mood-silly .fx-tongue {
+      opacity: 1;
+      animation: tongue-wiggle 0.7s infinite alternate ease-in-out;
+    }
+
+    /* --- 5. SMUG (Tự mãn) --- */
+    /* Mắt xếch tự tin nửa nhắm */
+    #char-smooth.mood-smug .smooth-eye-left { transform: scaleY(0.4) rotate(-14deg) translateY(2px); }
+    #char-smooth.mood-smug .smooth-eye-right { transform: scaleY(0.4) rotate(14deg) translateY(2px); }
+    #char-pixel.mood-smug .eye-left { transform: scaleY(0.45) rotate(-10deg); }
+    #char-pixel.mood-smug .eye-right { transform: scaleY(0.45) rotate(10deg); }
+
+    /* Một tai vểnh đắc thắng */
+    #char-smooth.mood-smug .ear-left { transform: translateY(-4px) rotate(-6deg); }
+    #char-smooth.mood-smug .ear-right { transform: translateY(2px) rotate(12deg); }
+    #char-pixel.mood-smug .ear-left { transform: translateY(-2px); }
+    #char-pixel.mood-smug .ear-right { transform: translateY(1px); }
+
+    /* Thân ưỡn ngửa tự mãn */
+    #char-smooth.mood-smug .orb-body { transform: rotate(-7deg) scale(1.05) translateY(-3px); }
+    #char-pixel.mood-smug .orb-core { transform: rotate(-6deg) scale(1.04); }
+
+    /* Phụ: đốm sáng lấp lánh trên khóe mặt */
+    .mood-smug .fx-glint { opacity: 1; animation: glint-flash 1.5s infinite ease-in-out; }
+
+    /* --- 6. LOVE (Mắt trái tim) --- */
+    /* Mắt biến thành hình trái tim */
+    .mood-love .eye-default { opacity: 0; }
+    .mood-love .eye-heart {
+      opacity: 1;
+      animation: heart-beat 0.8s infinite ease-in-out;
+    }
+
+    /* Tai nghiêng vào nhau */
+    #char-smooth.mood-love .ear-left { transform: rotate(10deg); }
+    #char-smooth.mood-love .ear-right { transform: rotate(-10deg); }
+    #char-pixel.mood-love .ear-left { transform: rotate(8deg); }
+    #char-pixel.mood-love .ear-right { transform: rotate(-8deg); }
+
+    /* Thân đập theo nhịp tim */
+    @keyframes love-thump {
+      0%, 100% { transform: scale(1); }
+      15% { transform: scale(1.08, 0.96); }
+      30% { transform: scale(0.98, 1.03); }
+      45% { transform: scale(1.05, 0.98); }
+    }
+    #char-smooth.mood-love .orb-body { animation: love-thump 1.2s infinite ease-in-out; }
+    #char-pixel.mood-love .orb-core { animation: love-thump 1.2s infinite steps(3); }
+
+    /* Phụ: tim bay bồng bềnh */
+    .mood-love .fx-hearts { opacity: 1; animation: float-up 1.8s infinite ease-out; }
+
+    /* --- 7. EMBARRASSED (Ngại ngùng) --- */
+    /* Mắt nhắm chặt xấu hổ > < */
+    #char-smooth.mood-embarrassed .smooth-eye { transform: scaleY(0.2) translateY(5px); opacity: 0.9; }
+    #char-pixel.mood-embarrassed .eye-left,
+    #char-pixel.mood-embarrassed .eye-right { transform: scaleY(0.3) translateY(3px); }
+
+    /* Tai máy bay cụp ngang */
+    #char-smooth.mood-embarrassed .ear-left { transform: rotate(-35deg) translateY(8px); }
+    #char-smooth.mood-embarrassed .ear-right { transform: rotate(35deg) translateY(8px); }
+    #char-pixel.mood-embarrassed .ear-left { transform: rotate(-25deg) translateY(2px); }
+    #char-pixel.mood-embarrassed .ear-right { transform: rotate(25deg) translateY(2px); }
+
+    /* Thân co nhỏ nhấp nhổm */
+    @keyframes embarrass-shrink {
+      0%, 100% { transform: scale(0.93) translateY(4px); }
+      50% { transform: scale(0.91) translateY(6px); }
+    }
+    #char-smooth.mood-embarrassed .orb-body { animation: embarrass-shrink 1.2s infinite ease-in-out; }
+    #char-pixel.mood-embarrassed .orb-core { animation: embarrass-shrink 1.2s infinite steps(2); }
+
+    /* Phụ: má hồng ửng + giọt mồ hôi */
+    .mood-embarrassed .fx-blush { opacity: 1; }
+    .mood-embarrassed .fx-sweat-single { opacity: 1; animation: drop-drip 1.6s infinite ease-in; }
+
+    /* --- 8. SAD (Buồn) --- */
+    /* Mắt rũ buồn cong úp */
+    #char-smooth.mood-sad .smooth-eye { transform: translateY(6px) scaleY(0.55); opacity: 0.85; }
+    #char-pixel.mood-sad .eye-left,
+    #char-pixel.mood-sad .eye-right { transform: translateY(3px) scaleY(0.6); }
+
+    /* Tai rủ xuống buồn thiu */
+    #char-smooth.mood-sad .ear-left { transform: rotate(-24deg) translateY(7px); }
+    #char-smooth.mood-sad .ear-right { transform: rotate(24deg) translateY(7px); }
+    #char-pixel.mood-sad .ear-left { transform: rotate(-18deg) translateY(2px); }
+    #char-pixel.mood-sad .ear-right { transform: rotate(18deg) translateY(2px); }
+
+    /* Thân chùng xuống thở dài */
+    @keyframes sad-sigh {
+      0%, 100% { transform: translateY(8px) scale(1.02, 0.94); }
+      50% { transform: translateY(12px) scale(0.98, 0.91); }
+    }
+    #char-smooth.mood-sad .orb-body { animation: sad-sigh 2.8s infinite ease-in-out; }
+    #char-pixel.mood-sad .orb-core { animation: sad-sigh 2.8s infinite steps(3); }
+
+    /* Phụ: giọt nước mắt rơi */
+    .mood-sad .fx-teardrop { opacity: 1; animation: tear-fall 1.8s infinite ease-in; }
+
+    /* --- 9. SLEEPY (Buồn ngủ) --- */
+    /* Mắt sụp mí như 2 vạch ngang */
+    #char-smooth.mood-sleepy .smooth-eye { transform: scaleY(0.18) translateY(6px); }
+    #char-pixel.mood-sleepy .eye-left,
+    #char-pixel.mood-sleepy .eye-right { transform: scaleY(0.2) translateY(3px); }
+
+    /* Tai rũ mềm lười biếng */
+    #char-smooth.mood-sleepy .ear-left { transform: rotate(-18deg) translateY(5px); }
+    #char-smooth.mood-sleepy .ear-right { transform: rotate(18deg) translateY(5px); }
+    #char-pixel.mood-sleepy .ear-left { transform: rotate(-14deg); }
+    #char-pixel.mood-sleepy .ear-right { transform: rotate(14deg); }
+
+    /* Thân gật gù buồn ngủ */
+    @keyframes nod-sleep {
+      0%, 100% { transform: translateY(4px) rotate(0deg); }
+      40% { transform: translateY(8px) rotate(4deg); }
+      60% { transform: translateY(10px) rotate(-3deg); }
+    }
+    #char-smooth.mood-sleepy .orb-body { animation: nod-sleep 3.8s infinite ease-in-out; }
+    #char-pixel.mood-sleepy .orb-core { animation: nod-sleep 3.8s infinite steps(4); }
+
+    /* Phụ: Zzz bay lên */
+    .mood-sleepy .fx-zzz { opacity: 1; animation: zzz-float 2.4s infinite ease-out; }
+
+    /* --- 10. THINKING_OLD (Suy nghĩ cũ) --- */
+    /* Mắt liếc lên trên phải */
+    #char-smooth.mood-thinking_old .smooth-eye-left,
+    #char-smooth.mood-thinking .smooth-eye-left { transform: translate(4px, -7px) scaleY(0.85); }
+    #char-smooth.mood-thinking_old .smooth-eye-right,
+    #char-smooth.mood-thinking .smooth-eye-right { transform: translate(4px, -7px) scaleY(0.7); }
+    #char-pixel.mood-thinking_old .eye-left,
+    #char-pixel.mood-thinking .eye-left { transform: translate(2px, -2px); }
+    #char-pixel.mood-thinking_old .eye-right,
+    #char-pixel.mood-thinking .eye-right { transform: translate(2px, -2px) scaleY(0.8); }
+
+    /* Tai vểnh xoay dò xét */
+    #char-smooth.mood-thinking_old .ear-left,
+    #char-smooth.mood-thinking .ear-left { transform: rotate(-8deg); }
+    #char-smooth.mood-thinking_old .ear-right,
+    #char-smooth.mood-thinking .ear-right { transform: rotate(-18deg) translateY(-2px); }
+    #char-pixel.mood-thinking_old .ear-left,
+    #char-pixel.mood-thinking .ear-left { transform: rotate(-6deg); }
+    #char-pixel.mood-thinking_old .ear-right,
+    #char-pixel.mood-thinking .ear-right { transform: rotate(-12deg); }
+
+    /* Thân nghiêng nhẹ bồng bềnh */
+    #char-smooth.mood-thinking_old .orb-body,
+    #char-smooth.mood-thinking .orb-body { transform: rotate(8deg) translateY(-4px); }
+    #char-pixel.mood-thinking_old .orb-core,
+    #char-pixel.mood-thinking .orb-core { transform: rotate(6deg); }
+
+    /* Phụ: dấu hỏi nhỏ ? */
+    .mood-thinking_old .fx-question,
+    .mood-thinking .fx-question { opacity: 1; animation: float-gentle 1.8s infinite alternate ease-in-out; }
+
+    /* --- 11. DEEP_THINKING_OLD (Suy nghĩ sâu cũ) --- */
+    /* Mắt thu nhỏ xoay nhẹ tập trung */
+    #char-smooth.mood-deep_thinking_old .smooth-eye,
+    #char-smooth.mood-deep_thinking .smooth-eye { transform: scale(0.65); }
+    #char-pixel.mood-deep_thinking_old .eye-left,
+    #char-pixel.mood-deep_thinking .eye-left,
+    #char-pixel.mood-deep_thinking_old .eye-right,
+    #char-pixel.mood-deep_thinking .eye-right { transform: scale(0.65); }
+
+    /* Cả 2 tai căng thẳng đứng */
+    #char-smooth.mood-deep_thinking_old .ear-left,
+    #char-smooth.mood-deep_thinking .ear-left { transform: translateY(-3px) rotate(2deg); }
+    #char-smooth.mood-deep_thinking_old .ear-right,
+    #char-smooth.mood-deep_thinking .ear-right { transform: translateY(-3px) rotate(-2deg); }
+    #char-pixel.mood-deep_thinking_old .ear-left,
+    #char-pixel.mood-deep_thinking .ear-left { transform: translateY(-1px); }
+    #char-pixel.mood-deep_thinking_old .ear-right,
+    #char-pixel.mood-deep_thinking .ear-right { transform: translateY(-1px); }
+
+    /* Thân lơ lửng quỹ đạo số 8 */
+    @keyframes deep-orbit {
+      0% { transform: translate(0, -6px); }
+      33% { transform: translate(4px, -2px); }
+      66% { transform: translate(-4px, -4px); }
+      100% { transform: translate(0, -6px); }
+    }
+    #char-smooth.mood-deep_thinking_old .orb-body,
+    #char-smooth.mood-deep_thinking .orb-body { animation: deep-orbit 3s infinite linear; }
+    #char-pixel.mood-deep_thinking_old .orb-core,
+    #char-pixel.mood-deep_thinking .orb-core { animation: deep-orbit 3s infinite steps(6); }
+
+    /* Phụ: vòng hạt quỹ đạo xoay */
+    .mood-deep_thinking_old .fx-orbit-ring,
+    .mood-deep_thinking .fx-orbit-ring { opacity: 1; animation: spin-burst 3.2s infinite linear; }
+
+    /* --- BẢN MỚI: THINKING_NEW (3 Chấm Gợn Sóng ...) --- */
+    /* Mắt liếc nhẹ về phía các chấm (lên trên bên phải) */
+    #char-smooth.mood-thinking_new .smooth-eye-left { transform: translate(6px, -9px) scaleY(0.85); }
+    #char-smooth.mood-thinking_new .smooth-eye-right { transform: translate(6px, -9px) scaleY(0.7); }
+    #char-pixel.mood-thinking_new .eye-left { transform: translate(3px, -3px); }
+    #char-pixel.mood-thinking_new .eye-right { transform: translate(3px, -3px) scaleY(0.8); }
+
+    /* Tai và thân dùng lại của bản cũ */
+    #char-smooth.mood-thinking_new .ear-left { transform: rotate(-8deg); }
+    #char-smooth.mood-thinking_new .ear-right { transform: rotate(-18deg) translateY(-2px); }
+    #char-pixel.mood-thinking_new .ear-left { transform: rotate(-6deg); }
+    #char-pixel.mood-thinking_new .ear-right { transform: rotate(-12deg); }
+    #char-smooth.mood-thinking_new .orb-body { transform: rotate(8deg) translateY(-4px); }
+    #char-pixel.mood-thinking_new .orb-core { transform: rotate(6deg); }
+
+    /* --- BẢN MỚI: DEEP_THINKING_NEW (3 Chấm Tam Giác Xoay Tròn) --- */
+    /* Mắt thu nhỏ và liếc nhẹ về phía các chấm (lên trên bên phải) */
+    #char-smooth.mood-deep_thinking_new .smooth-eye { transform: scale(0.65) translate(4px, -5px); }
+    #char-pixel.mood-deep_thinking_new .eye-left,
+    #char-pixel.mood-deep_thinking_new .eye-right { transform: scale(0.65) translate(2px, -2px); }
+
+    /* Tai và thân dùng lại của bản cũ */
+    #char-smooth.mood-deep_thinking_new .ear-left { transform: translateY(-3px) rotate(2deg); }
+    #char-smooth.mood-deep_thinking_new .ear-right { transform: translateY(-3px) rotate(-2deg); }
+    #char-pixel.mood-deep_thinking_new .ear-left { transform: translateY(-1px); }
+    #char-pixel.mood-deep_thinking_new .ear-right { transform: translateY(-1px); }
+    #char-smooth.mood-deep_thinking_new .orb-body { animation: deep-orbit 3s infinite linear; }
+    #char-pixel.mood-deep_thinking_new .orb-core { animation: deep-orbit 3s infinite steps(6); }
+
+    /* --- HIỆU ỨNG PHỤ CHO BẢN MỚI (FX Dots Transitions & Animations) --- */
+    /* Xuất hiện: fade + scale từ 0.6 lên 1, mờ dần khi rời đi */
+    .fx-dots-wave,
+    .fx-dots-orbit {
+      opacity: 0;
+      transform: scale(0.6);
+      transform-origin: 171px 33px;
+      transition: opacity 280ms ease, transform 280ms cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+    #char-pixel .fx-dots-wave,
+    #char-pixel .fx-dots-orbit {
+      transform-origin: 27px 6px;
+      transition: opacity 125ms steps(2);
+    }
+    .mood-thinking_new .fx-dots-wave {
+      opacity: 1 !important;
+      transform: scale(1) !important;
+    }
+    .mood-deep_thinking_new .fx-dots-orbit {
+      opacity: 1 !important;
+      transform: scale(1) !important;
+    }
+
+    /* SMOOTH thinking_new: 3 chấm gợn sóng sin mượt, transform và opacity */
+    @keyframes smooth-wave-dot {
+      0%, 100% {
+        transform: translateY(0);
+        opacity: 0.45;
+      }
+      50% {
+        transform: translateY(-4.5px);
+        opacity: 1;
+      }
+    }
+    #char-smooth .smooth-dot-1 {
+      animation: smooth-wave-dot 1.2s infinite ease-in-out;
+      animation-delay: 0s;
+    }
+    #char-smooth .smooth-dot-2 {
+      animation: smooth-wave-dot 1.2s infinite ease-in-out;
+      animation-delay: 0.18s;
+    }
+    #char-smooth .smooth-dot-3 {
+      animation: smooth-wave-dot 1.2s infinite ease-in-out;
+      animation-delay: 0.36s;
+    }
+
+    /* SMOOTH deep_thinking_new: 3 chấm tam giác xoay tròn đều, 1 vòng 2.4s */
+    @keyframes smooth-orbit-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    #char-smooth .orbit-spinner {
+      transform-origin: 171px 33px;
+      animation: smooth-orbit-spin 2.4s infinite linear;
+    }
+    /* Chấm nào ở trên thì sáng hơn một chút (độ sâu nhẹ) */
+    @keyframes smooth-dot-depth-top {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+    @keyframes smooth-dot-depth-bl {
+      0% { opacity: 0.65; }
+      33% { opacity: 0.55; }
+      83% { opacity: 1; }
+      100% { opacity: 0.65; }
+    }
+    @keyframes smooth-dot-depth-br {
+      0% { opacity: 0.65; }
+      17% { opacity: 1; }
+      67% { opacity: 0.55; }
+      100% { opacity: 0.65; }
+    }
+    #char-smooth .dot-top { animation: smooth-dot-depth-top 2.4s infinite linear; }
+    #char-smooth .dot-bl { animation: smooth-dot-depth-bl 2.4s infinite linear; }
+    #char-smooth .dot-br { animation: smooth-dot-depth-br 2.4s infinite linear; }
+
+    /* PIXEL thinking_new: 3 khối vuông pixel gợn sóng 8 FPS rời rạc */
+    @keyframes pixel-wave-dot {
+      0%, 100% { transform: translateY(0); }
+      33% { transform: translateY(-2px); }
+      66% { transform: translateY(-1px); }
+    }
+    #char-pixel .pixel-dot-1 {
+      animation: pixel-wave-dot 0.75s infinite steps(1);
+      animation-delay: 0s;
+    }
+    #char-pixel .pixel-dot-2 {
+      animation: pixel-wave-dot 0.75s infinite steps(1);
+      animation-delay: 0.125s;
+    }
+    #char-pixel .pixel-dot-3 {
+      animation: pixel-wave-dot 0.75s infinite steps(1);
+      animation-delay: 0.25s;
+    }
+
+    /* PIXEL deep_thinking_new: 3 chấm pixel tam giác xoay 8 bước rời rạc quanh tâm */
+    @keyframes pixel-orbit-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    #char-pixel .pixel-orbit-spinner {
+      transform-origin: 27px 6px;
+      animation: pixel-orbit-spin 2.4s infinite steps(8);
+    }
+
+    /* Tôn trọng prefers-reduced-motion (chấm đứng yên) */
+    @media (prefers-reduced-motion: reduce) {
+      #char-smooth .smooth-dot-1,
+      #char-smooth .smooth-dot-2,
+      #char-smooth .smooth-dot-3,
+      #char-smooth .orbit-spinner,
+      #char-smooth .dot-top,
+      #char-smooth .dot-bl,
+      #char-smooth .dot-br,
+      #char-pixel .pixel-dot-1,
+      #char-pixel .pixel-dot-2,
+      #char-pixel .pixel-dot-3,
+      #char-pixel .pixel-orbit-spinner {
+        animation: none !important;
+      }
+    }
+
+
+    /* --- 12. CONFUSED (Khó hiểu) --- */
+    /* Một mắt to một mắt nhỏ O . */
+    #char-smooth.mood-confused .smooth-eye-left { transform: scale(1.4) translateY(-1px); }
+    #char-smooth.mood-confused .smooth-eye-right { transform: scale(0.6) translateY(2px); }
+    #char-pixel.mood-confused .eye-left { transform: scale(1.35); }
+    #char-pixel.mood-confused .eye-right { transform: scale(0.6); }
+
+    /* Một tai thẳng một tai quẹo */
+    #char-smooth.mood-confused .ear-left { transform: rotate(18deg); }
+    #char-smooth.mood-confused .ear-right { transform: rotate(-28deg) translateY(4px); }
+    #char-pixel.mood-confused .ear-left { transform: rotate(14deg); }
+    #char-pixel.mood-confused .ear-right { transform: rotate(-20deg); }
+
+    /* Thân nghiêng 18 độ */
+    #char-smooth.mood-confused .orb-body { transform: rotate(18deg) translateX(-4px); }
+    #char-pixel.mood-confused .orb-core { transform: rotate(16deg); }
+
+    /* Phụ: dấu hỏi xoắn tít */
+    .mood-confused .fx-spiral-question { opacity: 1; animation: wobble-fx 1s infinite alternate ease-in-out; }
+
+    /* --- 13. SURPRISED (Ngạc nhiên) --- */
+    /* Mắt mở to tròn trố */
+    #char-smooth.mood-surprised .smooth-eye { transform: scale(1.5, 1.4); }
+    #char-pixel.mood-surprised .eye-left,
+    #char-pixel.mood-surprised .eye-right { transform: scale(1.5, 1.35); }
+
+    /* Tai giật đứng thẳng đơ */
+    #char-smooth.mood-surprised .ear-left { transform: translateY(-9px) rotate(4deg); }
+    #char-smooth.mood-surprised .ear-right { transform: translateY(-9px) rotate(-4deg); }
+    #char-pixel.mood-surprised .ear-left { transform: translateY(-3px); }
+    #char-pixel.mood-surprised .ear-right { transform: translateY(-3px); }
+
+    /* Thân bật nảy vọt lên */
+    #char-smooth.mood-surprised .orb-body { transform: translateY(-18px) scaleY(1.15) scaleX(0.92); }
+    #char-pixel.mood-surprised .orb-core { transform: translateY(-5px) scaleY(1.12); }
+
+    /* Phụ: dấu chấm than ! */
+    .mood-surprised .fx-exclamation { opacity: 1; animation: pop-in 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards; }
+
+    /* --- 14. PANICKED (Hốt hoảng) --- */
+    /* Mắt co rút giật bần bật */
+    @keyframes eye-jitter {
+      0%, 100% { transform: scale(0.75) translate(0, 0); }
+      25% { transform: scale(0.7) translate(-3px, 2px); }
+      75% { transform: scale(0.8) translate(3px, -2px); }
+    }
+    #char-smooth.mood-panicked .smooth-eye { animation: eye-jitter 0.12s infinite linear; }
+    #char-pixel.mood-panicked .eye-left,
+    #char-pixel.mood-panicked .eye-right { animation: eye-jitter 0.25s infinite steps(2); }
+
+    /* Tai rung lắc dữ dội */
+    @keyframes ear-flail-left {
+      0%, 100% { transform: rotate(-25deg); }
+      50% { transform: rotate(15deg); }
+    }
+    @keyframes ear-flail-right {
+      0%, 100% { transform: rotate(25deg); }
+      50% { transform: rotate(-15deg); }
+    }
+    #char-smooth.mood-panicked .ear-left { animation: ear-flail-left 0.15s infinite linear; }
+    #char-smooth.mood-panicked .ear-right { animation: ear-flail-right 0.15s infinite linear; }
+    #char-pixel.mood-panicked .ear-left { animation: ear-flail-left 0.15s infinite steps(2); }
+    #char-pixel.mood-panicked .ear-right { animation: ear-flail-right 0.15s infinite steps(2); }
+
+    /* Thân rung lắc ngang cực nhanh */
+    @keyframes panicked-shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px) scale(0.95); }
+      75% { transform: translateX(6px) scale(1.05); }
+    }
+    #char-smooth.mood-panicked .orb-body { animation: panicked-shake 0.12s infinite linear; }
+    #char-pixel.mood-panicked .orb-core { animation: panicked-shake 0.12s infinite steps(2); }
+
+    /* Phụ: 2 giọt mồ hôi bắn 2 bên 💦 */
+    .mood-panicked .fx-sweat-spray { opacity: 1; animation: sweat-splash 0.6s infinite ease-out; }
+
+    /* --- 15. SCARED (Sợ hãi) --- */
+    /* Mắt thu nhỏ run rẩy */
+    #char-smooth.mood-scared .smooth-eye { transform: scale(0.5) translateY(4px); }
+    #char-pixel.mood-scared .eye-left,
+    #char-pixel.mood-scared .eye-right { transform: scale(0.5) translateY(2px); }
+
+    /* Tai ép chặt sát đầu */
+    #char-smooth.mood-scared .ear-left { transform: rotate(-38deg) translateY(9px); }
+    #char-smooth.mood-scared .ear-right { transform: rotate(38deg) translateY(9px); }
+    #char-pixel.mood-scared .ear-left { transform: rotate(-30deg) translateY(3px); }
+    #char-pixel.mood-scared .ear-right { transform: rotate(30deg) translateY(3px); }
+
+    /* Thân co rúm run rẩy */
+    @keyframes scared-tremble {
+      0%, 100% { transform: scale(0.88) translate(0, 8px); }
+      50% { transform: scale(0.86) translate(1px, 9px); }
+    }
+    #char-smooth.mood-scared .orb-body { animation: scared-tremble 0.09s infinite linear; }
+    #char-pixel.mood-scared .orb-core { animation: scared-tremble 0.09s infinite steps(2); }
+
+    /* Phụ: bóng sợ hãi / vạch run rẩy */
+    .mood-scared .fx-fear-lines { opacity: 1; }
+
+    /* --- 16. ANGRY (Tức giận) --- */
+    /* Mắt xếch hung dữ / \ */
+    #char-smooth.mood-angry .smooth-eye-left { transform: rotate(26deg) scaleY(0.7) scaleX(1.1); fill: #ff4d4f; }
+    #char-smooth.mood-angry .smooth-eye-right { transform: rotate(-26deg) scaleY(0.7) scaleX(1.1); fill: #ff4d4f; }
+    #char-pixel.mood-angry .eye-left { transform: rotate(20deg) scaleY(0.7); fill: #ff4d4f; }
+    #char-pixel.mood-angry .eye-right { transform: rotate(-20deg) scaleY(0.7); fill: #ff4d4f; }
+
+    /* Tai cụp bẹp hung hăng */
+    #char-smooth.mood-angry .ear-left { transform: rotate(-32deg) translateY(6px); }
+    #char-smooth.mood-angry .ear-right { transform: rotate(32deg) translateY(6px); }
+    #char-pixel.mood-angry .ear-left { transform: rotate(-24deg) translateY(2px); }
+    #char-pixel.mood-angry .ear-right { transform: rotate(24deg) translateY(2px); }
+
+    /* Thân phồng to rung giận */
+    @keyframes angry-growl {
+      0%, 100% { transform: scale(1.08); }
+      50% { transform: scale(1.06) translate(0.8px, -0.8px); }
+    }
+    #char-smooth.mood-angry .orb-body { animation: angry-growl 0.16s infinite linear; }
+    #char-pixel.mood-angry .orb-core { animation: angry-growl 0.16s infinite steps(2); }
+
+    /* Phụ: gân giận đỏ 💢 */
+    .mood-angry .fx-anger-vein { opacity: 1; animation: anger-pulse 0.7s infinite alternate ease-in-out; }
+
+    /* --- 17. TALKING (Đang nói) --- */
+    /* Mắt chớp nhẹ sống động */
+    @keyframes talking-eye {
+      0%, 100% { transform: scaleY(1); }
+      40% { transform: scaleY(0.85); }
+      70% { transform: scaleY(1.08); }
+    }
+    #char-smooth.mood-talking .smooth-eye { animation: talking-eye 0.4s infinite ease-in-out; }
+    #char-pixel.mood-talking .eye-left,
+    #char-pixel.mood-talking .eye-right { animation: talking-eye 0.5s infinite steps(4); }
+
+    /* Tai nhún theo giọng */
+    @keyframes talking-ears {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+    #char-smooth.mood-talking .ear-left,
+    #char-smooth.mood-talking .ear-right { animation: talking-ears 0.4s infinite ease-in-out; }
+    #char-pixel.mood-talking .ear-left,
+    #char-pixel.mood-talking .ear-right { animation: talking-ears 0.4s infinite steps(2); }
+
+    /* Thân nhấp nhô theo nhịp nói */
+    @keyframes speech-bounce {
+      0%, 100% { transform: translateY(0) scale(1, 1); }
+      50% { transform: translateY(-6px) scale(0.98, 1.03); }
+    }
+    #char-smooth.mood-talking .orb-body { animation: speech-bounce 0.38s infinite ease-in-out; }
+    #char-pixel.mood-talking .orb-core { animation: speech-bounce 0.38s infinite steps(2); }
+
+    /* Phụ: sóng âm thanh ))) */
+    .mood-talking .fx-sound-waves { opacity: 1; animation: sound-pulse 0.5s infinite alternate ease-in-out; }
+
+    /* --- 18. ERROR (Lỗi / Glitch) --- */
+    /* Mắt thành chữ X hoặc đỏ rực */
+    .mood-error .eye-default { opacity: 0; }
+    .mood-error .eye-cross { opacity: 1; fill: #ef4444; }
+
+    /* Tai lệch giật cục */
+    @keyframes error-ear-glitch {
+      0%, 100% { transform: rotate(0deg); }
+      30% { transform: rotate(-25deg) translateY(4px); }
+      70% { transform: rotate(20deg) translateY(-3px); }
+    }
+    #char-smooth.mood-error .ear-left { animation: error-ear-glitch 0.25s infinite steps(2); }
+    #char-smooth.mood-error .ear-right { animation: error-ear-glitch 0.25s infinite steps(2) reverse; }
+    #char-pixel.mood-error .ear-left { animation: error-ear-glitch 0.25s infinite steps(2); }
+    #char-pixel.mood-error .ear-right { animation: error-ear-glitch 0.25s infinite steps(2) reverse; }
+
+    /* Thân glitch giật ngang */
+    @keyframes glitch-orb {
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(-5px, 2px); }
+      40% { transform: translate(5px, -2px); }
+      60% { transform: translate(-3px, -1px); }
+      80% { transform: translate(4px, 1px); }
+    }
+    #char-smooth.mood-error .orb-body { animation: glitch-orb 0.2s infinite steps(3); }
+    #char-pixel.mood-error .orb-core { animation: glitch-orb 0.2s infinite steps(2); }
+
+    /* Phụ: biểu tượng cảnh báo ⚠️ */
+    .mood-error .fx-warning { opacity: 1; animation: warning-flash 0.3s infinite alternate steps(2); }
+
+    /* --- 19. ANNOYED (Bực bội / Khó chịu / Cạn lời) --- */
+    /* Mắt Smooth: dẹt mi trên, đảo mắt chán nản liếc lệch, thỉnh thoảng giật nhẹ */
+    @keyframes annoyed-eyes-smooth {
+      0%, 35% { transform: scaleY(0.42) translate(4px, 3px) rotate(6deg); }
+      40%, 46% { transform: scaleY(0.42) translate(4px, 1.5px) rotate(8deg); }
+      60%, 85% { transform: scaleY(0.42) translate(-3px, 3px) rotate(-4deg); }
+      100% { transform: scaleY(0.42) translate(4px, 3px) rotate(6deg); }
+    }
+    #char-smooth.mood-annoyed .smooth-eye { animation: annoyed-eyes-smooth 3.8s infinite ease-in-out; }
+
+    /* Mắt Pixel: dẹt mi trên bằng khối pixel, chạy đúng nhịp 8 FPS (steps) */
+    @keyframes annoyed-eyes-pixel {
+      0%, 40% { transform: scaleY(0.4) translate(1px, 2px); }
+      45%, 50% { transform: scaleY(0.4) translate(1px, 1px); }
+      60%, 90% { transform: scaleY(0.4) translate(-1px, 2px); }
+      100% { transform: scaleY(0.4) translate(1px, 2px); }
+    }
+    #char-pixel.mood-annoyed .eye-left,
+    #char-pixel.mood-annoyed .eye-right { animation: annoyed-eyes-pixel 3.8s infinite steps(6); }
+
+    /* Tai Smooth: cụp ngả sau, thỉnh thoảng một bên tai giật nhẹ */
+    #char-smooth.mood-annoyed .ear-left { transform: rotate(-24deg) translateY(4px); }
+    @keyframes ear-twitch-right {
+      0%, 55%, 100% { transform: rotate(18deg) translateY(3px); }
+      58% { transform: rotate(32deg) translateY(6px); }
+      62% { transform: rotate(16deg) translateY(2px); }
+      66% { transform: rotate(26deg) translateY(4px); }
+    }
+    #char-smooth.mood-annoyed .ear-right { animation: ear-twitch-right 3.8s infinite ease-in-out; }
+
+    /* Tai Pixel: 8 FPS steps */
+    #char-pixel.mood-annoyed .ear-left { transform: rotate(-18deg) translateY(2px); }
+    @keyframes ear-twitch-pixel {
+      0%, 55%, 100% { transform: rotate(14deg); }
+      60% { transform: rotate(24deg) translateY(1px); }
+      66% { transform: rotate(14deg); }
+    }
+    #char-pixel.mood-annoyed .ear-right { animation: ear-twitch-pixel 3.8s infinite steps(4); }
+
+    /* Thân Smooth: hơi thấp xuống, thở dài phồng xẹp nặng nề mỗi 3.8s, nảy nhẹ "chậc" */
+    @keyframes annoyed-sigh-smooth {
+      0%, 30% { transform: translateY(4px) rotate(-4deg) scale(1); }
+      45% { transform: translateY(1px) rotate(-3deg) scale(1.03, 1.02); }
+      60% { transform: translateY(7px) rotate(-5deg) scale(0.97, 0.94); }
+      72% { transform: translateY(3px) rotate(-4deg) scale(0.99, 0.98); }
+      100% { transform: translateY(4px) rotate(-4deg) scale(1); }
+    }
+    #char-smooth.mood-annoyed .orb-body { animation: annoyed-sigh-smooth 3.8s infinite ease-in-out; }
+
+    /* Thân Pixel: 8 FPS steps */
+    #char-pixel.mood-annoyed .orb-core { animation: annoyed-sigh-smooth 3.8s infinite steps(6); }
+
+    /* Phụ: gân giận nhỏ nhấp nháy chậm + khói thở dài nhỏ */
+    @keyframes annoyed-vein-blink {
+      0%, 100% { opacity: 0.25; transform: scale(0.85); }
+      50% { opacity: 0.95; transform: scale(1.1); }
+    }
+    .mood-annoyed .fx-annoyed-vein { opacity: 1; animation: annoyed-vein-blink 1.8s infinite ease-in-out; }
+
+    @keyframes sigh-puff-float {
+      0%, 45% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+      60% { opacity: 0.75; transform: translate(4px, -2px) scale(1); }
+      80% { opacity: 0; transform: translate(12px, -6px) scale(1.3); }
+      100% { opacity: 0; transform: translate(12px, -6px) scale(1.3); }
+    }
+    .mood-annoyed .fx-sigh-puff { opacity: 1; animation: sigh-puff-float 3.8s infinite ease-out; }
+
+
+    /* ==========================================================================
+       5. KEYFRAME ANIMATIONS CHO HIỆU ỨNG PHỤ (Auxiliary FX)
+       ========================================================================== */
+    @keyframes pulse-glow {
+      0% { opacity: 0.4; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1.1); }
+    }
+
+    @keyframes spin-burst {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes tongue-wiggle {
+      0% { transform: translateY(0) scale(0.9); }
+      100% { transform: translateY(2px) scale(1.1); }
+    }
+
+    @keyframes glint-flash {
+      0%, 100% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    @keyframes heart-beat {
+      0%, 100% { transform: scale(1); }
+      30% { transform: scale(1.25); }
+      60% { transform: scale(0.95); }
+    }
+
+    @keyframes float-up {
+      0% { transform: translateY(4px); opacity: 0; }
+      40% { opacity: 1; }
+      100% { transform: translateY(-16px); opacity: 0; }
+    }
+
+    @keyframes drop-drip {
+      0% { transform: translateY(0); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: translateY(12px); opacity: 0; }
+    }
+
+    @keyframes tear-fall {
+      0% { transform: translateY(0); opacity: 0; }
+      30% { opacity: 1; }
+      100% { transform: translateY(16px); opacity: 0; }
+    }
+
+    @keyframes zzz-float {
+      0% { transform: translate(0, 0) scale(0.7); opacity: 0; }
+      40% { opacity: 1; }
+      100% { transform: translate(12px, -24px) scale(1.2); opacity: 0; }
+    }
+
+    @keyframes float-gentle {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-6px); }
+    }
+
+    @keyframes wobble-fx {
+      0% { transform: rotate(-8deg); }
+      100% { transform: rotate(8deg); }
+    }
+
+    @keyframes pop-in {
+      0% { transform: scale(0) translateY(8px); opacity: 0; }
+      70% { transform: scale(1.2) translateY(-2px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    @keyframes sweat-splash {
+      0% { transform: scale(0.5); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: scale(1.2); opacity: 0; }
+    }
+
+    @keyframes anger-pulse {
+      0% { transform: scale(0.85) rotate(-5deg); }
+      100% { transform: scale(1.15) rotate(5deg); }
+    }
+
+    @keyframes sound-pulse {
+      0% { opacity: 0.3; transform: scaleX(0.7); }
+      100% { opacity: 1; transform: scaleX(1.1); }
+    }
+
+    @keyframes warning-flash {
+      0% { opacity: 0.3; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1.1); }
+    }
+
+
+    /* ==========================================================================
+       6. KHU VỰC ĐIỀU KHIỂN & LƯỚI NÚT BẤM (Responsive Mobile Grid)
+       Nút to, tối thiểu 44px, dễ chạm bằng ngón cái trên điện thoại
+       ========================================================================== */
+    .controls-panel {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .quick-btn {
+      appearance: none;
+      background: #1e222a;
+      border: 1px solid var(--border-subtle);
+      color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 150ms ease, color 150ms ease;
+    }
+
+    .quick-btn:hover {
+      background: #282d38;
+      color: #fff;
+    }
+
+    .quick-btn:active {
+      background: #333a48;
+    }
+
+    .quick-btn.recording-active {
+      background: #7f1d1d !important;
+      border-color: #ef4444 !important;
+      color: #fecaca !important;
+      animation: btn-rec-pulse 1s infinite alternate ease-in-out;
+    }
+
+    @keyframes btn-rec-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      100% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    }
+
+    /* Chỉ báo đang quay clip */
+    .recording-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #fecaca;
+      background: rgba(40, 16, 20, 0.9);
+      border: 1px solid #ef4444;
+      padding: 4px 10px;
+      border-radius: 20px;
+      z-index: 25;
+      animation: rec-pulse 1s infinite alternate ease-in-out;
+    }
+
+    .rec-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #ef4444;
+      box-shadow: 0 0 6px #ef4444;
+    }
+
+    @keyframes rec-pulse {
+      0% { opacity: 0.85; transform: scale(0.98); }
+      100% { opacity: 1; transform: scale(1.02); }
+    }
+
+    /* Modal xem lại và lưu video */
+    .video-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+
+    .video-modal {
+      background: #14171d;
+      border: 1px solid #2d3340;
+      border-radius: 12px;
+      max-width: 420px;
+      width: 100%;
+      padding: 16px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
+      animation: modal-pop 250ms cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+
+    @keyframes modal-pop {
+      0% { transform: scale(0.92); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .video-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .video-modal-header h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .close-btn {
+      appearance: none;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.5rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 4px;
+    }
+
+    .close-btn:hover {
+      color: #fff;
+    }
+
+    .video-modal-body video {
+      width: 100%;
+      max-height: 280px;
+      border-radius: 8px;
+      background: #0c0d10;
+      border: 1px solid #222631;
+      display: block;
+    }
+
+    .video-note {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    .video-modal-footer {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .active-download {
+      background: #2563eb !important;
+      color: #fff !important;
+      border-color: #3b82f6 !important;
+      text-decoration: none;
+    }
+
+    /* Lưới nút cảm xúc (18 nút) */
+    .mood-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    @media (min-width: 480px) {
+      .mood-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    @media (min-width: 680px) {
+      .mood-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+
+    .mood-btn {
+      appearance: none;
+      border: 1px solid var(--border-subtle);
+      background-color: var(--bg-btn);
+      color: var(--text-main);
+      min-height: 48px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: background-color 150ms ease, border-color 150ms ease, transform 100ms ease;
+    }
+
+    .mood-btn:hover {
+      background-color: var(--bg-btn-hover);
+      border-color: var(--border-accent);
+    }
+
+    .mood-btn:active {
+      background-color: var(--bg-btn-active);
+      transform: scale(0.97);
+    }
+
+    .mood-btn.active {
+      background-color: #273042;
+      border-color: #60a5fa;
+      color: #ffffff;
+      box-shadow: 0 0 0 1px #60a5fa;
+    }
+
+    .mood-btn .btn-icon {
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+
+    .mood-btn .btn-label {
+      font-size: 0.76rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .mood-btn .btn-badge-temp {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #f59e0b;
+      title: "Tự quay về neutral sau 2.5s";
+    }
+
+    /* Thanh thông tin kỹ thuật & API gợi ý */
+    .dev-footer {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    .code-pill {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: #0d0f12;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #1f232b;
+      color: #93c5fd;
+    }
+
+    /* ==========================================================================
+       7. HỖ TRỢ PREFERS-REDUCED-MOTION
+       Tôn trọng người dùng khi cài đặt giảm chuyển động trên hệ điều hành
+       ========================================================================== */
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.001s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001s !important;
+      }
+      .stage-shadow {
+        transform: none !important;
+      }
+      .eye-tracker {
+        transform: none !important;
+      }
+    }
+  </style>
+<script src="/_aistudio-iframe.js?v=6634132a"></script><script src="https://cdn.jsdelivr.net/npm/html2canvas-pro@2.0.4"></script><style>.aistudio-hover-highlight { box-shadow: inset 0 0 0 0.5px white, inset 0 0 0 1.5px rgba(128,128,128,0.6) !important; }.aistudio-active-highlight { outline: 2px solid #87a9ff !important; outline-offset: -2px !important; box-shadow: 0 0 0 0.5px rgba(0,0,0,0.3), inset 0 0 0 0.5px rgba(0,0,0,0.3) !important; }.aistudio-generating-blur { filter: blur(5px) grayscale(100%) brightness(28%) !important; transition: filter 0.3s ease; }#aistudio-focus-mode-tag { position: absolute; display: none; align-items: center; gap: 4px; background: #87a9ff; border-radius: 12px; z-index: 10000; padding: 8px; color: #32302c; font-family: Inter, sans-serif; font-size: 14px; font-style: normal; font-weight: 500; line-height: 21px; pointer-events: none; }#aistudio-hover-mode-tag { position: absolute; display: none; align-items: center; gap: 4px; background: rgba(128,128,128,0.6); border-radius: 12px; z-index: 10000; padding: 8px; color: white; font-family: Inter, sans-serif; font-size: 14px; font-style: normal; font-weight: 500; line-height: 21px; pointer-events: none; }.aistudio-img-icon { display: none; vertical-align: middle; pointer-events: auto; cursor: pointer; }.aistudio-img-icon.visible { display: inline-flex; }#aistudio-focus-mode-tag .aistudio-img-icon { position: relative; width: 26px; height: 26px; background: #32302c; border-radius: 6px; margin: -4px -4px -4px 0; }#aistudio-focus-mode-tag .aistudio-img-icon::before { content: ""; position: absolute; top: 4px; left: 4px; width: 18px; height: 18px; background-color: white; -webkit-mask-image: url("https://fonts.gstatic.com/s/i/short-term/release/googlesymbols/edit_fix_auto/default/24px.svg"); -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; mask-image: url("https://fonts.gstatic.com/s/i/short-term/release/googlesymbols/edit_fix_auto/default/24px.svg"); mask-size: contain; mask-repeat: no-repeat; }#aistudio-hover-mode-tag .aistudio-img-icon { position: relative; width: 18px; height: 18px; margin-left: 4px; }#aistudio-hover-mode-tag .aistudio-img-icon::before { content: ""; position: absolute; top: 0; left: 0; width: 18px; height: 18px; background-color: white; -webkit-mask-image: url("https://fonts.gstatic.com/s/i/short-term/release/googlesymbols/edit_fix_auto/default/24px.svg"); -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; mask-image: url("https://fonts.gstatic.com/s/i/short-term/release/googlesymbols/edit_fix_auto/default/24px.svg"); mask-size: contain; mask-repeat: no-repeat; }#aistudio-focus-mode-tag .aistudio-img-icon:hover, #aistudio-hover-mode-tag .aistudio-img-icon:hover { background: #424242 !important; }#aistudio-focus-mode-tag .aistudio-img-icon:active, #aistudio-hover-mode-tag .aistudio-img-icon:active { background: #393f51 !important; }</style></head>
+<body>
+
+  <div class="app-container">
+    <!-- Header: Tên ứng dụng & Bộ chọn nhân vật A / B -->
+    <header>
+      <div class="brand-title">
+        <h1>Cat Orb Emotions</h1>
+        <span class="brand-badge">Playground</span>
+      </div>
+
+      <!-- Nút chuyển giữa Nhân vật A (Pixel) và B (Smooth) -->
+      <div class="char-toggle-group" role="group" aria-label="Chọn kiểu nhân vật">
+        <button type="button" id="btn-char-pixel" class="char-toggle-btn" onclick="setCharacter('pixel')" aria-pressed="false">
+          <span>👾</span> Nhân vật A (Pixel)
+        </button>
+        <button type="button" id="btn-char-smooth" class="char-toggle-btn active" onclick="setCharacter('smooth')" aria-pressed="true">
+          <span>⚪</span> Nhân vật B (Smooth)
+        </button>
+      </div>
+    </header>
+
+    <!-- Sân khấu tương tác: Theo dõi chuột/chạm ngón tay -->
+    <main class="stage-wrapper" id="stage" aria-label="Sân khấu hiển thị nhân vật">
+      <div class="stage-background"></div>
+      <div class="stage-shadow" id="stage-shadow" style="transform: scale(1) translateY(0px); opacity: 0.7;"></div>
+
+      <!-- Huy hiệu hiển thị cảm xúc hiện tại -->
+      <div class="mood-indicator" id="mood-indicator">
+        <span class="dot"></span>
+        <span id="mood-name-display">neutral (bình thường)</span>
+        <div class="timer-bar" id="temp-timer-bar" style="transition: none; width: 0%;"></div>
+      </div>
+
+      <!-- Chỉ báo đang quay video -->
+      <div class="recording-badge" id="recording-badge" style="display: none;">
+        <span class="rec-dot"></span>
+        <span id="recording-timer-text">Đang quay: 3.0s</span>
+      </div>
+
+      <!-- KHUNG NHÂN VẬT -->
+      <div class="character-viewport">
+
+        <!-- ==================================================================
+             NHÂN VẬT A: PIXEL ART (Theo ảnh 1)
+             - Lưới pixel sắc nét (crispEdges, image-rendering: pixelated)
+             - Tai đen viền trong trắng, thân đen viền bậc thang
+             ================================================================== -->
+        <div id="char-pixel" class="char-instance mood-neutral" aria-hidden="true">
+          <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+            <g class="orb-core">
+              <!-- Tai trái (viền đen, trong trắng theo ảnh 1) -->
+              <g class="ears-group">
+                <g class="ear-left">
+                  <!-- Viền ngoài tai trái -->
+                  <rect x="9" y="3" width="2" height="1" fill="#000000"></rect>
+                  <rect x="8" y="4" width="1" height="4" fill="#000000"></rect>
+                  <rect x="11" y="4" width="1" height="2" fill="#000000"></rect>
+                  <rect x="12" y="6" width="1" height="2" fill="#000000"></rect>
+                  <!-- Lõi trắng tai trái -->
+                  <rect x="9" y="4" width="2" height="4" fill="#ffffff"></rect>
+                  <rect x="10" y="5" width="2" height="3" fill="#ffffff"></rect>
+                </g>
+
+                <!-- Tai phải (viền đen, trong trắng theo ảnh 1) -->
+                <g class="ear-right">
+                  <!-- Viền ngoài tai phải -->
+                  <rect x="21" y="3" width="2" height="1" fill="#000000"></rect>
+                  <rect x="23" y="4" width="1" height="4" fill="#000000"></rect>
+                  <rect x="20" y="4" width="1" height="2" fill="#000000"></rect>
+                  <rect x="19" y="6" width="1" height="2" fill="#000000"></rect>
+                  <!-- Lõi trắng tai phải -->
+                  <rect x="21" y="4" width="2" height="4" fill="#ffffff"></rect>
+                  <rect x="20" y="5" width="2" height="3" fill="#ffffff"></rect>
+                </g>
+              </g>
+
+              <!-- Thân quả cầu đen (Lưới pixel viền bậc thang + viền xám trong) -->
+              <!-- Viền đen ngoài cùng -->
+              <rect x="12" y="7" width="8" height="1" fill="#000000"></rect>
+              <rect x="9" y="8" width="3" height="1" fill="#000000"></rect>
+              <rect x="20" y="8" width="3" height="1" fill="#000000"></rect>
+              <rect x="7" y="9" width="2" height="2" fill="#000000"></rect>
+              <rect x="23" y="9" width="2" height="2" fill="#000000"></rect>
+              <rect x="6" y="11" width="1" height="3" fill="#000000"></rect>
+              <rect x="25" y="11" width="1" height="3" fill="#000000"></rect>
+              <rect x="5" y="14" width="1" height="6" fill="#000000"></rect>
+              <rect x="26" y="14" width="1" height="6" fill="#000000"></rect>
+              <rect x="6" y="20" width="1" height="3" fill="#000000"></rect>
+              <rect x="25" y="20" width="1" height="3" fill="#000000"></rect>
+              <rect x="7" y="23" width="2" height="2" fill="#000000"></rect>
+              <rect x="23" y="23" width="2" height="2" fill="#000000"></rect>
+              <rect x="9" y="25" width="3" height="1" fill="#000000"></rect>
+              <rect x="20" y="25" width="3" height="1" fill="#000000"></rect>
+              <rect x="12" y="26" width="8" height="1" fill="#000000"></rect>
+
+              <!-- Vòng chuyển sắc xám đậm (inner rim than chì) -->
+              <rect x="12" y="8" width="8" height="1" fill="#2d3039"></rect>
+              <rect x="9" y="9" width="3" height="1" fill="#2d3039"></rect>
+              <rect x="20" y="9" width="3" height="1" fill="#2d3039"></rect>
+              <rect x="7" y="11" width="2" height="3" fill="#2d3039"></rect>
+              <rect x="23" y="11" width="2" height="3" fill="#2d3039"></rect>
+              <rect x="6" y="14" width="2" height="6" fill="#2d3039"></rect>
+              <rect x="24" y="14" width="2" height="6" fill="#2d3039"></rect>
+              <rect x="7" y="20" width="2" height="3" fill="#2d3039"></rect>
+              <rect x="23" y="20" width="2" height="3" fill="#2d3039"></rect>
+              <rect x="9" y="24" width="3" height="1" fill="#2d3039"></rect>
+              <rect x="20" y="24" width="3" height="1" fill="#2d3039"></rect>
+              <rect x="12" y="25" width="8" height="1" fill="#2d3039"></rect>
+
+              <!-- Lõi thân đen tuyền -->
+              <rect x="8" y="14" width="16" height="6" fill="#0a0a0d"></rect>
+              <rect x="9" y="10" width="14" height="4" fill="#0a0a0d"></rect>
+              <rect x="9" y="20" width="14" height="4" fill="#0a0a0d"></rect>
+
+              <!-- Nhóm mắt Pixel (liếc nhìn theo con trỏ) -->
+              <g class="eye-tracker">
+                <!-- Mắt trái mặc định -->
+                <g class="eye-left">
+                  <rect class="eye-default" x="10" y="14" width="2" height="4" fill="#ffffff"></rect>
+                  <!-- Mắt trái tim cho mood-love -->
+                  <path class="eye-heart fx-item" d="M10 14h1v1h-1z M12 14h1v1h-1z M9 15h5v2h-5z M10 17h3v1h-3z M11 18h1v1h-1z" fill="#f43f5e"></path>
+                  <!-- Mắt chữ X cho mood-error -->
+                  <path class="eye-cross fx-item" d="M10 14h1v1h-1z M12 14h1v1h-1z M11 15h1v1h-1z M10 16h1v1h-1z M12 16h1v1h-1z" fill="#ef4444"></path>
+                </g>
+                <!-- Mắt phải mặc định -->
+                <g class="eye-right">
+                  <rect class="eye-default" x="20" y="14" width="2" height="4" fill="#ffffff"></rect>
+                  <!-- Mắt trái tim cho mood-love -->
+                  <path class="eye-heart fx-item" d="M20 14h1v1h-1z M22 14h1v1h-1z M19 15h5v2h-5z M20 17h3v1h-3z M21 18h1v1h-1z" fill="#f43f5e"></path>
+                  <!-- Mắt chữ X cho mood-error -->
+                  <path class="eye-cross fx-item" d="M20 14h1v1h-1z M22 14h1v1h-1z M21 15h1v1h-1z M20 16h1v1h-1z M22 16h1v1h-1z" fill="#ef4444"></path>
+                </g>
+              </g>
+
+              <!-- Phụ kiện FX Pixel -->
+              <!-- Lưỡi lè (mood-silly) -->
+              <rect class="fx-tongue fx-item" x="15" y="19" width="2" height="2" fill="#fb7185"></rect>
+              <!-- Tia sáng (mood-happy) -->
+              <g class="fx-sparkles fx-item">
+                <rect x="4" y="9" width="1" height="1" fill="#fef08a"></rect>
+                <rect x="27" y="9" width="1" height="1" fill="#fef08a"></rect>
+              </g>
+              <!-- Năng lượng bừng sáng (mood-excited) -->
+              <g class="fx-burst fx-item">
+                <rect x="2" y="15" width="2" height="1" fill="#fbbf24"></rect>
+                <rect x="28" y="15" width="2" height="1" fill="#fbbf24"></rect>
+                <rect x="15" y="2" width="1" height="2" fill="#fbbf24"></rect>
+              </g>
+              <!-- Má hồng (mood-embarrassed) -->
+              <g class="fx-blush fx-item">
+                <rect x="8" y="18" width="2" height="1" fill="#f43f5e"></rect>
+                <rect x="22" y="18" width="2" height="1" fill="#f43f5e"></rect>
+              </g>
+              <!-- Giọt mồ hôi đơn (mood-embarrassed) -->
+              <rect class="fx-sweat-single fx-item" x="25" y="10" width="1" height="2" fill="#38bdf8"></rect>
+              <!-- Giọt nước mắt (mood-sad) -->
+              <rect class="fx-teardrop fx-item" x="10" y="19" width="1" height="2" fill="#38bdf8"></rect>
+              <!-- Zzz (mood-sleepy) -->
+              <g class="fx-zzz fx-item">
+                <path d="M25 6h3v1l-2 1h2v1h-3v-1l2-1h-2z" fill="#93c5fd"></path>
+              </g>
+              <!-- Dấu hỏi ? (mood-thinking_old) -->
+              <g class="fx-question fx-item">
+                <path d="M26 6h2v1h1v1h-1v1h-1v1h-1v-2h1v-1h-1z M26 12h1v1h-1z" fill="#a78bfa"></path>
+              </g>
+              <!-- Vòng hạt (mood-deep_thinking_old) -->
+              <g class="fx-orbit-ring fx-item">
+                <rect x="3" y="13" width="1" height="1" fill="#818cf8"></rect>
+                <rect x="28" y="18" width="1" height="1" fill="#818cf8"></rect>
+              </g>
+              <!-- 3 chấm pixel gợn sóng (mood-thinking_new) -->
+              <g class="fx-dots-wave fx-item">
+                <rect class="pixel-dot pixel-dot-1" x="25" y="6" width="1" height="1" fill="#ffffff"></rect>
+                <rect class="pixel-dot pixel-dot-2" x="27" y="6" width="1" height="1" fill="#ffffff"></rect>
+                <rect class="pixel-dot pixel-dot-3" x="29" y="6" width="1" height="1" fill="#ffffff"></rect>
+              </g>
+              <!-- 3 chấm pixel tam giác xoay tròn (mood-deep_thinking_new) -->
+              <g class="fx-dots-orbit fx-item">
+                <g class="pixel-orbit-spinner">
+                  <rect class="pixel-triangle-dot" x="27" y="3" width="1" height="1" fill="#ffffff"></rect>
+                  <rect class="pixel-triangle-dot" x="24" y="8" width="1" height="1" fill="#cbd5e1"></rect>
+                  <rect class="pixel-triangle-dot" x="29" y="8" width="1" height="1" fill="#cbd5e1"></rect>
+                </g>
+              </g>
+              <!-- Dấu hỏi xoắn (mood-confused) -->
+              <g class="fx-spiral-question fx-item">
+                <path d="M25 4h3v1h-1v1h1v1h-2v-1h1v-1h-2z" fill="#f59e0b"></path>
+              </g>
+              <!-- Dấu chấm than ! (mood-surprised) -->
+              <g class="fx-exclamation fx-item">
+                <rect x="15" y="2" width="2" height="3" fill="#facc15"></rect>
+                <rect x="15" y="6" width="2" height="1" fill="#facc15"></rect>
+              </g>
+              <!-- Mồ hôi bắn (mood-panicked) -->
+              <g class="fx-sweat-spray fx-item">
+                <rect x="3" y="11" width="1" height="2" fill="#38bdf8"></rect>
+                <rect x="28" y="11" width="1" height="2" fill="#38bdf8"></rect>
+              </g>
+              <!-- Vạch sợ hãi (mood-scared) -->
+              <g class="fx-fear-lines fx-item">
+                <rect x="12" y="9" width="1" height="3" fill="#64748b"></rect>
+                <rect x="15" y="9" width="1" height="3" fill="#64748b"></rect>
+                <rect x="18" y="9" width="1" height="3" fill="#64748b"></rect>
+              </g>
+              <!-- Gân giận đỏ (mood-angry) -->
+              <g class="fx-anger-vein fx-item">
+                <path d="M23 7h1v1h1v-1h1v1h-1v1h1v1h-1v-1h-1v1h-1v-1h1v-1h-1z" fill="#ef4444"></path>
+              </g>
+              <!-- Sóng âm thanh (mood-talking) -->
+              <g class="fx-sound-waves fx-item">
+                <rect x="28" y="15" width="1" height="3" fill="#e2e8f0"></rect>
+                <rect x="30" y="14" width="1" height="5" fill="#94a3b8"></rect>
+              </g>
+              <!-- Cảnh báo lỗi ⚠️ (mood-error) -->
+              <g class="fx-warning fx-item">
+                <path d="M15 2h2l2 4h-6z M16 4h0v1h0z M16 5.5h0v.5h0z" fill="#ef4444"></path>
+              </g>
+              <!-- Tim bay (mood-love) -->
+              <g class="fx-hearts fx-item">
+                <rect x="25" y="7" width="2" height="2" fill="#f43f5e"></rect>
+              </g>
+              <!-- Tia sáng tự mãn (mood-smug) -->
+              <g class="fx-glint fx-item">
+                <rect x="24" y="13" width="1" height="1" fill="#ffffff"></rect>
+              </g>
+              <!-- Gân bực nhỏ (mood-annoyed) -->
+              <g class="fx-annoyed-vein fx-item">
+                <rect x="23" y="7" width="1" height="1" fill="#e11d48"></rect>
+                <rect x="25" y="7" width="1" height="1" fill="#e11d48"></rect>
+                <rect x="24" y="8" width="1" height="1" fill="#e11d48"></rect>
+              </g>
+              <!-- Khói thở dài (mood-annoyed) -->
+              <g class="fx-sigh-puff fx-item">
+                <rect x="21" y="21" width="2" height="1" fill="#94a3b8"></rect>
+                <rect x="23" y="20" width="2" height="1" fill="#94a3b8"></rect>
+              </g>
+            </g>
+          </svg>
+        </div>
+
+
+        <!-- ==================================================================
+             NHÂN VẬT B: SMOOTH VECTOR (Theo ảnh 2)
+             - Vector SVG bóng mượt, viền xám tro, gradient đen chiều sâu
+             - 2 tai trắng bo tròn, 2 mắt bầu dục trắng rực rỡ
+             ================================================================== -->
+        <div id="char-smooth" class="char-instance visible mood-neutral" aria-hidden="false">
+          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <!-- Gradient chiều sâu của quả cầu đen -->
+              <radialGradient id="orbGrad" cx="42%" cy="38%" r="65%">
+                <stop offset="0%" stop-color="#24262d"></stop>
+                <stop offset="55%" stop-color="#111216"></stop>
+                <stop offset="100%" stop-color="#060709"></stop>
+              </radialGradient>
+
+              <!-- Gradient viền xám tro mờ theo ảnh 2 -->
+              <linearGradient id="rimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#4e515b"></stop>
+                <stop offset="100%" stop-color="#27282e"></stop>
+              </linearGradient>
+
+              <!-- Màu trái tim cho mắt mood-love -->
+              <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fb7185"></stop>
+                <stop offset="100%" stop-color="#e11d48"></stop>
+              </linearGradient>
+            </defs>
+
+            <g class="orb-body">
+              <!-- Cặp tai mèo trắng bo tròn (Theo ảnh 2) -->
+              <g class="ears-group">
+                <!-- Tai trái: Màu trắng, đỉnh bo cong mềm mại -->
+                <path class="ear-left" d="M 64 74 C 54 44, 70 20, 80 18 C 90 16, 98 42, 98 62 Z" fill="#ffffff"></path>
+                <!-- Tai phải: Màu trắng, đỉnh bo cong mềm mại -->
+                <path class="ear-right" d="M 102 62 C 102 42, 110 16, 120 18 C 130 20, 146 44, 136 74 Z" fill="#ffffff"></path>
+              </g>
+
+              <!-- Thân quả cầu đen: Viền xám ngoài và lõi gradient đen -->
+              <!-- Lớp bóng nước riêng: Nằm PHÍA SAU thân orb (z-order dưới thân) -->
+              <g class="orb-rim-water" style="transform: translate(0px, 0.03px) rotate(0rad) scale(1.00242, 0.997585) rotate(0rad);">
+                <!-- Đĩa bóng nước lớn hơn thân orb 5-6% (r=64.5 so với r=61), màu xám xanh bán trong suốt -->
+                <circle class="orb-rim-disc" cx="100" cy="108" r="64.5" fill="#1c1f27" fill-opacity="0.85" stroke="#454955" stroke-width="2.2" stroke-opacity="0.9"></circle>
+                <!-- Mép trong sát thân orb sáng hơn một chút (rim light xám nhẹ) -->
+                <circle class="orb-rim-inner-light" cx="100" cy="108" r="61.2" fill="none" stroke="#5d6373" stroke-width="1.8" stroke-opacity="0.55"></circle>
+              </g>
+
+              <!-- Thân cầu đặc đen tuyền: NẰM ĐÈ LÊN TRÊN LỚP BÓNG NƯỚC -->
+              <circle class="orb-main-sphere" cx="100" cy="108" r="61" fill="url(#orbGrad)"></circle>
+
+              <!-- Nhóm mắt Smooth (theo dõi con trỏ chuột/tay chạm) -->
+              <g class="eye-tracker">
+                <!-- Mắt trái: Hình viên thuốc / oval trắng dựng đứng -->
+                <g class="eye-unit-left">
+                  <rect class="smooth-eye smooth-eye-left eye-default" x="80" y="88" width="14" height="28" rx="7" fill="#ffffff"></rect>
+                  <!-- Mắt trái tim cho mood-love -->
+                  <path class="eye-heart fx-item" d="M 87 90 C 83 83, 73 87, 76 96 C 79 104, 87 110, 87 110 C 87 110, 95 104, 98 96 C 101 87, 91 83, 87 90 Z" fill="url(#heartGrad)"></path>
+                  <!-- Mắt chữ X cho mood-error -->
+                  <g class="eye-cross fx-item">
+                    <line x1="78" y1="92" x2="94" y2="108" stroke="#ef4444" stroke-width="4" stroke-linecap="round"></line>
+                    <line x1="94" y1="92" x2="78" y2="108" stroke="#ef4444" stroke-width="4" stroke-linecap="round"></line>
+                  </g>
+                </g>
+
+                <!-- Mắt phải: Hình viên thuốc / oval trắng dựng đứng -->
+                <g class="eye-unit-right">
+                  <rect class="smooth-eye smooth-eye-right eye-default" x="108" y="88" width="14" height="28" rx="7" fill="#ffffff"></rect>
+                  <!-- Mắt trái tim cho mood-love -->
+                  <path class="eye-heart fx-item" d="M 115 90 C 111 83, 101 87, 104 96 C 107 104, 115 110, 115 110 C 115 110, 123 104, 126 96 C 129 87, 119 83, 115 90 Z" fill="url(#heartGrad)"></path>
+                  <!-- Mắt chữ X cho mood-error -->
+                  <g class="eye-cross fx-item">
+                    <line x1="106" y1="92" x2="122" y2="108" stroke="#ef4444" stroke-width="4" stroke-linecap="round"></line>
+                    <line x1="122" y1="92" x2="106" y2="108" stroke="#ef4444" stroke-width="4" stroke-linecap="round"></line>
+                  </g>
+                </g>
+              </g>
+
+              <!-- Phụ kiện FX Vector Smooth -->
+              <!-- Lưỡi lè (mood-silly) -->
+              <path class="fx-tongue fx-item" d="M 96 122 Q 100 134 104 122 Z" fill="#f43f5e"></path>
+
+              <!-- Tia sáng ✦ (mood-happy) -->
+              <g class="fx-sparkles fx-item">
+                <path d="M 44 94 Q 48 94 48 90 Q 48 94 52 94 Q 48 94 48 98 Q 48 94 44 94 Z" fill="#fef08a"></path>
+                <path d="M 152 90 Q 156 90 156 86 Q 156 90 160 90 Q 156 90 156 94 Q 156 90 152 90 Z" fill="#fef08a"></path>
+              </g>
+
+              <!-- Năng lượng bừng sáng (mood-excited) -->
+              <g class="fx-burst fx-item">
+                <circle cx="28" cy="108" r="4" fill="#fbbf24"></circle>
+                <circle cx="172" cy="108" r="4" fill="#fbbf24"></circle>
+                <circle cx="100" cy="30" r="4" fill="#fbbf24"></circle>
+                <line x1="28" y1="108" x2="16" y2="108" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"></line>
+                <line x1="172" y1="108" x2="184" y2="108" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"></line>
+              </g>
+
+              <!-- Má hồng (mood-embarrassed) -->
+              <g class="fx-blush fx-item">
+                <ellipse cx="68" cy="116" rx="9" ry="5" fill="#f43f5e" opacity="0.45"></ellipse>
+                <ellipse cx="132" cy="116" rx="9" ry="5" fill="#f43f5e" opacity="0.45"></ellipse>
+              </g>
+
+              <!-- Giọt mồ hôi đơn (mood-embarrassed) -->
+              <path class="fx-sweat-single fx-item" d="M 148 76 C 148 76 154 84 154 88 C 154 91 151 93 148 93 C 145 93 142 91 142 88 C 142 84 148 76 148 76 Z" fill="#38bdf8"></path>
+
+              <!-- Giọt nước mắt rơi (mood-sad) -->
+              <path class="fx-teardrop fx-item" d="M 82 120 C 82 120 86 128 86 131 C 86 133 84 135 82 135 C 80 135 78 133 78 131 C 78 128 82 120 82 120 Z" fill="#38bdf8"></path>
+
+              <!-- Chữ Zzz bay lên (mood-sleepy) -->
+              <g class="fx-zzz fx-item">
+                <text x="146" y="66" fill="#93c5fd" font-size="16" font-weight="bold" font-family="sans-serif">z</text>
+                <text x="156" y="52" fill="#bfdbfe" font-size="12" font-weight="bold" font-family="sans-serif">z</text>
+                <text x="164" y="42" fill="#dbeafe" font-size="9" font-weight="bold" font-family="sans-serif">z</text>
+              </g>
+
+              <!-- Dấu hỏi chấm ? (mood-thinking_old) -->
+              <g class="fx-question fx-item">
+                <text x="144" y="65" fill="#c084fc" font-size="24" font-weight="bold" font-family="sans-serif">?</text>
+              </g>
+
+              <!-- Vòng hạt quỹ đạo (mood-deep_thinking_old) -->
+              <g class="fx-orbit-ring fx-item">
+                <ellipse cx="100" cy="108" rx="80" ry="24" fill="none" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.6" transform="rotate(-15 100 108)"></ellipse>
+                <circle cx="170" cy="88" r="3" fill="#818cf8"></circle>
+                <circle cx="30" cy="128" r="2.5" fill="#a5b4fc"></circle>
+              </g>
+
+              <!-- 3 chấm "..." gợn sóng (mood-thinking_new) -->
+              <g class="fx-dots-wave fx-item">
+                <circle class="smooth-dot smooth-dot-1" cx="164" cy="34" r="2.8" fill="#f1f5f9"></circle>
+                <circle class="smooth-dot smooth-dot-2" cx="171" cy="34" r="2.8" fill="#f1f5f9"></circle>
+                <circle class="smooth-dot smooth-dot-3" cx="178" cy="34" r="2.8" fill="#f1f5f9"></circle>
+              </g>
+
+              <!-- 3 chấm tam giác xoay tròn (mood-deep_thinking_new) -->
+              <g class="fx-dots-orbit fx-item">
+                <g class="orbit-spinner">
+                  <circle class="triangle-dot dot-top" cx="171" cy="26" r="2.8" fill="#ffffff"></circle>
+                  <circle class="triangle-dot dot-bl" cx="165" cy="37" r="2.8" fill="#e2e8f0"></circle>
+                  <circle class="triangle-dot dot-br" cx="177" cy="37" r="2.8" fill="#e2e8f0"></circle>
+                </g>
+              </g>
+
+              <!-- Dấu hỏi xoắn (mood-confused) -->
+              <g class="fx-spiral-question fx-item">
+                <text x="146" y="62" fill="#f59e0b" font-size="28" font-weight="bold" font-family="sans-serif">?</text>
+                <circle cx="152" cy="72" r="2" fill="#f59e0b"></circle>
+              </g>
+
+              <!-- Dấu chấm than ! (mood-surprised) -->
+              <g class="fx-exclamation fx-item">
+                <rect x="97" y="24" width="6" height="20" rx="3" fill="#facc15"></rect>
+                <circle cx="100" cy="51" r="3" fill="#facc15"></circle>
+              </g>
+
+              <!-- Mồ hôi bắn 2 bên (mood-panicked) -->
+              <g class="fx-sweat-spray fx-item">
+                <path d="M 28 88 C 28 88 20 84 20 80 C 20 77 23 75 26 75 C 29 75 32 77 32 80 C 32 84 28 88 28 88 Z" fill="#38bdf8"></path>
+                <path d="M 172 88 C 172 88 180 84 180 80 C 180 77 177 75 174 75 C 171 75 168 77 168 80 C 168 84 172 88 172 88 Z" fill="#38bdf8"></path>
+              </g>
+
+              <!-- Vạch sợ hãi (mood-scared) -->
+              <g class="fx-fear-lines fx-item">
+                <line x1="85" y1="58" x2="85" y2="76" stroke="#64748b" stroke-width="2" stroke-linecap="round"></line>
+                <line x1="100" y1="55" x2="100" y2="74" stroke="#64748b" stroke-width="2" stroke-linecap="round"></line>
+                <line x1="115" y1="58" x2="115" y2="76" stroke="#64748b" stroke-width="2" stroke-linecap="round"></line>
+              </g>
+
+              <!-- Gân giận đỏ (mood-angry) -->
+              <g class="fx-anger-vein fx-item">
+                <path d="M 140 65 L 146 65 L 146 59 M 146 65 L 152 65 L 152 71 M 146 65 L 140 65 L 140 71 M 146 65 L 146 71" stroke="#ef4444" stroke-width="3" stroke-linecap="round" fill="none"></path>
+              </g>
+
+              <!-- Sóng âm thanh (mood-talking) -->
+              <g class="fx-sound-waves fx-item">
+                <path d="M 166 98 A 12 12 0 0 1 166 118" fill="none" stroke="#e2e8f0" stroke-width="2.5" stroke-linecap="round"></path>
+                <path d="M 174 92 A 20 20 0 0 1 174 124" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"></path>
+              </g>
+
+              <!-- Cảnh báo lỗi ⚠️ (mood-error) -->
+              <g class="fx-warning fx-item">
+                <polygon points="100,22 114,48 86,48" fill="#ef4444"></polygon>
+                <text x="100" y="44" fill="#ffffff" font-size="14" font-weight="bold" text-anchor="middle" font-family="sans-serif">!</text>
+              </g>
+
+              <!-- Trái tim bay (mood-love) -->
+              <g class="fx-hearts fx-item">
+                <path d="M 148 64 C 145 59 137 62 140 68 C 142 74 148 78 148 78 C 148 78 154 74 156 68 C 159 62 151 59 148 64 Z" fill="#fb7185"></path>
+              </g>
+
+              <!-- Điểm sáng tự mãn (mood-smug) -->
+              <g class="fx-glint fx-item">
+                <polygon points="144,102 147,105 144,108 141,105" fill="#ffffff"></polygon>
+              </g>
+
+              <!-- Gân bực nhỏ (mood-annoyed) -->
+              <g class="fx-annoyed-vein fx-item">
+                <path d="M 136 68 L 140 68 L 140 64 M 140 68 L 144 68 L 144 72 M 140 68 L 136 68 L 136 72 M 140 68 L 140 72" stroke="#e11d48" stroke-width="2.2" stroke-linecap="round" fill="none"></path>
+              </g>
+
+              <!-- Hơi thở dài / khói nhỏ (mood-annoyed) -->
+              <g class="fx-sigh-puff fx-item">
+                <path d="M 124 125 Q 134 122 142 126" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 3" opacity="0.75"></path>
+              </g>
+            </g>
+          </svg>
+        </div>
+
+      </div>
+
+      <div class="tracking-hint">Rê chuột hoặc chạm ngón tay để mắt nhìn theo</div>
+    </main>
+
+    <!-- BỘ ĐIỀU KHIỂN & LƯỚI NÚT CẢM XÚC (19 TRẠNG THÁI) -->
+    <section class="controls-panel" aria-label="Bảng điều khiển cảm xúc">
+      <div class="panel-header">
+        <span>Chọn cảm xúc (21 trạng thái)</span>
+        <div class="action-row">
+          <button type="button" class="quick-btn" onclick="toggleAutoTour()" id="btn-auto-tour">
+            <span>▶</span> Demo
+          </button>
+          <button type="button" class="quick-btn" onclick="triggerManualBlink()">
+            <span>😉</span> Chớp mắt
+          </button>
+          <button type="button" class="quick-btn" onclick="startVideoRecording()" id="btn-record-video" title="Quay và tải clip video 3 giây">
+            <span>🎬</span> Quay clip (3s)
+          </button>
+          <button type="button" class="quick-btn" onclick="downloadHtml()" title="Tải file HTML độc lập về máy">
+            <span>💾</span> File HTML
+          </button>
+        </div>
+      </div>
+
+      <!-- Lưới 18 nút bấm cho từng cảm xúc -->
+      <div class="mood-grid" id="mood-button-grid" role="group" aria-label="Lưới chọn cảm xúc">
+        <!-- 1. Neutral -->
+        <button type="button" class="mood-btn active" data-mood="neutral" onclick="setMood('neutral')">
+          <span class="btn-icon">😐</span>
+          <span class="btn-label">Bình thường</span>
+        </button>
+
+        <!-- 2. Happy -->
+        <button type="button" class="mood-btn" data-mood="happy" onclick="setMood('happy')">
+          <span class="btn-icon">😄</span>
+          <span class="btn-label">Vui vẻ</span>
+        </button>
+
+        <!-- 3. Excited -->
+        <button type="button" class="mood-btn" data-mood="excited" onclick="setMood('excited')">
+          <span class="btn-icon">🤩</span>
+          <span class="btn-label">Phấn khích</span>
+        </button>
+
+        <!-- 4. Silly -->
+        <button type="button" class="mood-btn" data-mood="silly" onclick="setMood('silly')">
+          <span class="btn-icon">🤪</span>
+          <span class="btn-label">Ngốc nghếch</span>
+        </button>
+
+        <!-- 5. Smug -->
+        <button type="button" class="mood-btn" data-mood="smug" onclick="setMood('smug')">
+          <span class="btn-icon">😏</span>
+          <span class="btn-label">Tự mãn</span>
+        </button>
+
+        <!-- 6. Love -->
+        <button type="button" class="mood-btn" data-mood="love" onclick="setMood('love')">
+          <span class="btn-icon">🥰</span>
+          <span class="btn-label">Yêu thích</span>
+        </button>
+
+        <!-- 7. Embarrassed (Tạm thời) -->
+        <button type="button" class="mood-btn" data-mood="embarrassed" onclick="setMood('embarrassed')">
+          <span class="btn-badge-temp"></span>
+          <span class="btn-icon">😳</span>
+          <span class="btn-label">Ngại ngùng</span>
+        </button>
+
+        <!-- 8. Sad -->
+        <button type="button" class="mood-btn" data-mood="sad" onclick="setMood('sad')">
+          <span class="btn-icon">🥺</span>
+          <span class="btn-label">Buồn bã</span>
+        </button>
+
+        <!-- 9. Sleepy -->
+        <button type="button" class="mood-btn" data-mood="sleepy" onclick="setMood('sleepy')">
+          <span class="btn-icon">😴</span>
+          <span class="btn-label">Buồn ngủ</span>
+        </button>
+
+        <!-- 10. Confused -->
+        <button type="button" class="mood-btn" data-mood="confused" onclick="setMood('confused')">
+          <span class="btn-icon">🤨</span>
+          <span class="btn-label">Khó hiểu</span>
+        </button>
+
+        <!-- 11. Surprised (Tạm thời) -->
+        <button type="button" class="mood-btn" data-mood="surprised" onclick="setMood('surprised')">
+          <span class="btn-badge-temp"></span>
+          <span class="btn-icon">😲</span>
+          <span class="btn-label">Ngạc nhiên</span>
+        </button>
+
+        <!-- 12. Panicked (Tạm thời) -->
+        <button type="button" class="mood-btn" data-mood="panicked" onclick="setMood('panicked')">
+          <span class="btn-badge-temp"></span>
+          <span class="btn-icon">😱</span>
+          <span class="btn-label">Hốt hoảng</span>
+        </button>
+
+        <!-- 13. Scared -->
+        <button type="button" class="mood-btn" data-mood="scared" onclick="setMood('scared')">
+          <span class="btn-icon">😨</span>
+          <span class="btn-label">Sợ hãi</span>
+        </button>
+
+        <!-- 14. Angry -->
+        <button type="button" class="mood-btn" data-mood="angry" onclick="setMood('angry')">
+          <span class="btn-icon">😡</span>
+          <span class="btn-label">Tức giận</span>
+        </button>
+
+        <!-- 15. Talking -->
+        <button type="button" class="mood-btn" data-mood="talking" onclick="setMood('talking')">
+          <span class="btn-icon">💬</span>
+          <span class="btn-label">Đang nói</span>
+        </button>
+
+        <!-- 16. Error -->
+        <button type="button" class="mood-btn" data-mood="error" onclick="setMood('error')">
+          <span class="btn-icon">⚠️</span>
+          <span class="btn-label">Bị lỗi</span>
+        </button>
+
+        <!-- 17. Annoyed -->
+        <button type="button" class="mood-btn" data-mood="annoyed" onclick="setMood('annoyed')">
+          <span class="btn-icon">😒</span>
+          <span class="btn-label">Bực bội</span>
+        </button>
+
+        <!-- Cụm 4 nút suy nghĩ (cũ và mới) gom ở cuối danh sách -->
+        <!-- 18. Suy nghĩ (cũ) -->
+        <button type="button" class="mood-btn" data-mood="thinking_old" onclick="setMood('thinking_old')">
+          <span class="btn-icon">🤔</span>
+          <span class="btn-label">Suy nghĩ (cũ)</span>
+        </button>
+
+        <!-- 19. Suy nghĩ sâu (cũ) -->
+        <button type="button" class="mood-btn" data-mood="deep_thinking_old" onclick="setMood('deep_thinking_old')">
+          <span class="btn-icon">🧐</span>
+          <span class="btn-label">Suy nghĩ sâu (cũ)</span>
+        </button>
+
+        <!-- 20. Suy nghĩ (mới) -->
+        <button type="button" class="mood-btn" data-mood="thinking_new" onclick="setMood('thinking_new')">
+          <span class="btn-icon">💭</span>
+          <span class="btn-label">Suy nghĩ (mới)</span>
+        </button>
+
+        <!-- 21. Suy nghĩ sâu (mới) -->
+        <button type="button" class="mood-btn" data-mood="deep_thinking_new" onclick="setMood('deep_thinking_new')">
+          <span class="btn-icon">🔮</span>
+          <span class="btn-label">Suy nghĩ sâu (mới)</span>
+        </button>
+      </div>
+
+      <!-- Thông tin trợ giúp lập trình viên -->
+      <footer class="dev-footer">
+        <div>
+          Gọi JavaScript: <code class="code-pill" id="code-snippet-preview">setMood('neutral');</code>
+        </div>
+        <div>
+          Chấm vàng trên nút: Cảm xúc tạm thời (tự quay về sau 2.5s)
+        </div>
+        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--border-subtle); display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+          <span>Kiểm tra phần cứng &amp; API thiết bị:</span>
+          <button type="button" class="quick-btn" onclick="openDiagnosticsModal()" id="btn-open-diag" style="border-color: #6366f1; color: #a5b4fc;">
+            <span>🔬</span> Chẩn đoán xuất video
+          </button>
+        </div>
+      </footer>
+    </section>
+  </div>
+
+  <!-- Modal Chẩn đoán xuất video trên thiết bị -->
+  <div class="video-modal-backdrop" id="diag-modal-backdrop" style="display: none;" onclick="closeDiagModal(event)">
+    <div class="video-modal" style="max-width: 720px; width: 95vw; max-height: 90vh; display: flex; flex-direction: column;" onclick="event.stopPropagation()">
+      <div class="video-modal-header">
+        <h3>🔬 Chẩn đoán khả năng xuất video trên thiết bị</h3>
+        <button type="button" class="close-btn" onclick="closeDiagModal()">×</button>
+      </div>
+      <div class="video-modal-body" style="flex: 1; overflow-y: auto; padding: 12px 16px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;">
+          <button type="button" class="quick-btn" onclick="runDeviceDiagnostics()" id="btn-rerun-diag">
+            <span>🔄</span> Chạy lại chẩn đoán
+          </button>
+          <button type="button" class="quick-btn" onclick="copyDiagResults()" id="btn-copy-diag">
+            <span>📋</span> Copy kết quả
+          </button>
+          <button type="button" class="quick-btn" onclick="testDownloadFiles()" id="btn-test-download">
+            <span>📥</span> Tải file thử (txt &amp; mp4)
+          </button>
+        </div>
+        <div id="diag-status" style="font-size: 0.82rem; color: #94a3b8; margin-bottom: 8px;">Nhấn "Chạy lại chẩn đoán" để kiểm tra...</div>
+        <pre id="diag-output" style="background: #090a0f; border: 1px solid #1e222a; color: #cbd5e1; font-family: monospace; font-size: 0.76rem; line-height: 1.45; padding: 12px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; user-select: text; max-height: 52vh; overflow-y: auto;"></pre>
+        <textarea id="diag-copy-fallback" style="position: absolute; left: -9999px; top: -9999px;"></textarea>
+      </div>
+      <div class="video-modal-footer">
+        <button type="button" class="quick-btn" onclick="closeDiagModal()">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal xem lại và tải video sau khi quay xong -->
+  <div class="video-modal-backdrop" id="video-modal-backdrop" style="display: none;" onclick="closeVideoModal(event)">
+    <div class="video-modal" onclick="event.stopPropagation()">
+      <div class="video-modal-header">
+        <h3>🎬 Clip animation đã tạo xong!</h3>
+        <button type="button" class="close-btn" onclick="closeVideoModal()">×</button>
+      </div>
+      <div class="video-modal-body">
+        <video id="recorded-video-player" autoplay="" loop="" playsinline="" controls=""></video>
+        <p class="video-note">Nhấn nút bên dưới để tải video về máy (hoặc chạm giữ video trên điện thoại để lưu trực tiếp vào Thư viện ảnh).</p>
+      </div>
+      <div class="video-modal-footer">
+        <button type="button" class="quick-btn" onclick="closeVideoModal()">Đóng</button>
+        <a id="video-download-btn" class="quick-btn active-download" download="cat-orb-animation.mp4">
+          <span>⬇️</span> Tải video về máy
+        </a>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==========================================================================
+       8. JAVASCRIPT ĐIỀU KHIỂN LOGIC (Thuần, không thư viện)
+       - Quản lý Nhân vật (setCharacter)
+       - Quản lý Cảm xúc (setMood)
+       - Mắt liếc theo con trỏ chuột / ngón tay
+       - Chớp mắt ngẫu nhiên 3–6s
+       - Tự động quay về neutral đối với cảm xúc tạm thời
+       ========================================================================== -->
+  <script>
+    // --- 1. BIẾN TRẠNG THÁI HỆ THỐNG ---
+    let currentCharacter = 'smooth'; // 'pixel' | 'smooth'
+    let currentMood = 'neutral';
+    let tempTimer = null;
+    let blinkTimer = null;
+    let autoTourTimer = null;
+    let isAutoTourRunning = false;
+
+    // Danh sách 21 cảm xúc và tên hiển thị tiếng Việt
+    const MOOD_DATA = {
+      neutral: { label: 'neutral (bình thường)', isTemp: false },
+      happy: { label: 'happy (vui vẻ)', isTemp: false },
+      excited: { label: 'excited (phấn khích)', isTemp: false },
+      silly: { label: 'silly (ngốc nghếch)', isTemp: false },
+      smug: { label: 'smug (tự mãn)', isTemp: false },
+      love: { label: 'love (yêu thích)', isTemp: false },
+      embarrassed: { label: 'embarrassed (ngại ngùng)', isTemp: true },
+      sad: { label: 'sad (buồn bã)', isTemp: false },
+      sleepy: { label: 'sleepy (buồn ngủ)', isTemp: false },
+      confused: { label: 'confused (khó hiểu)', isTemp: false },
+      surprised: { label: 'surprised (ngạc nhiên)', isTemp: true },
+      panicked: { label: 'panicked (hốt hoảng)', isTemp: true },
+      scared: { label: 'scared (sợ hãi)', isTemp: false },
+      angry: { label: 'angry (tức giận)', isTemp: false },
+      talking: { label: 'talking (đang nói)', isTemp: false },
+      error: { label: 'error (bị lỗi)', isTemp: false },
+      annoyed: { label: 'annoyed (bực bội)', isTemp: false },
+      thinking_old: { label: 'thinking_old (suy nghĩ cũ)', isTemp: false },
+      deep_thinking_old: { label: 'deep_thinking_old (nghĩ sâu cũ)', isTemp: false },
+      thinking_new: { label: 'thinking_new (suy nghĩ mới)', isTemp: false },
+      deep_thinking_new: { label: 'deep_thinking_new (nghĩ sâu mới)', isTemp: false }
+    };
+
+    const ALL_MOOD_KEYS = Object.keys(MOOD_DATA);
+
+    // Tham chiếu các phần tử DOM
+    const charPixelEl = document.getElementById('char-pixel');
+    const charSmoothEl = document.getElementById('char-smooth');
+    const btnCharPixel = document.getElementById('btn-char-pixel');
+    const btnCharSmooth = document.getElementById('btn-char-smooth');
+    const stageEl = document.getElementById('stage');
+    const stageShadow = document.getElementById('stage-shadow');
+    const moodDisplayEl = document.getElementById('mood-name-display');
+    const timerBarEl = document.getElementById('temp-timer-bar');
+    const codeSnippetEl = document.getElementById('code-snippet-preview');
+    const btnAutoTour = document.getElementById('btn-auto-tour');
+
+    // --- 2. HÀM CHUYỂN ĐỔI NHÂN VẬT: setCharacter('pixel' | 'smooth') ---
+    function setCharacter(type) {
+      if (type !== 'pixel' && type !== 'smooth') return;
+      currentCharacter = type;
+
+      if (type === 'pixel') {
+        charPixelEl.classList.add('visible');
+        charPixelEl.setAttribute('aria-hidden', 'false');
+        charSmoothEl.classList.remove('visible');
+        charSmoothEl.setAttribute('aria-hidden', 'true');
+
+        btnCharPixel.classList.add('active');
+        btnCharPixel.setAttribute('aria-pressed', 'true');
+        btnCharSmooth.classList.remove('active');
+        btnCharSmooth.setAttribute('aria-pressed', 'false');
+      } else {
+        charSmoothEl.classList.add('visible');
+        charSmoothEl.setAttribute('aria-hidden', 'false');
+        charPixelEl.classList.remove('visible');
+        charPixelEl.setAttribute('aria-hidden', 'true');
+
+        btnCharSmooth.classList.add('active');
+        btnCharSmooth.setAttribute('aria-pressed', 'true');
+        btnCharPixel.classList.remove('active');
+        btnCharPixel.setAttribute('aria-pressed', 'false');
+      }
+
+      // Đồng bộ lại class cảm xúc trên nhân vật mới chọn
+      applyMoodClass(currentMood);
+    }
+    // Gắn vào window để gọi từ console hoặc các module ngoài
+    window.setCharacter = setCharacter;
+
+
+    // --- 3. HÀM ĐỔI CẢM XÚC: setMood('tên') ---
+    function setMood(moodName) {
+      if (moodName === 'thinking') moodName = 'thinking_old';
+      if (moodName === 'deep_thinking') moodName = 'deep_thinking_old';
+      if (!MOOD_DATA[moodName]) return;
+      currentMood = moodName;
+
+      // Xóa timer đếm ngược tạm thời cũ nếu có
+      if (tempTimer) {
+        clearTimeout(tempTimer);
+        tempTimer = null;
+      }
+      timerBarEl.style.transition = 'none';
+      timerBarEl.style.width = '0%';
+
+      // Cập nhật class CSS trên cả 2 nhân vật
+      applyMoodClass(moodName);
+
+      // Cập nhật UI nút bấm được chọn
+      document.querySelectorAll('.mood-btn').forEach(btn => {
+        if (btn.getAttribute('data-mood') === moodName) {
+          btn.classList.add('active');
+          btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      // Cập nhật nhãn thông tin
+      const moodInfo = MOOD_DATA[moodName];
+      moodDisplayEl.textContent = moodInfo.label;
+      codeSnippetEl.textContent = `setMood('${moodName}');`;
+
+      // Cập nhật bóng sàn sân khấu tương ứng
+      updateFloorShadow(moodName);
+
+      // Xử lý vị trí mắt: CHỈ DUY NHẤT 'neutral' mới nhìn theo con trỏ chuột, các cảm xúc khác nhìn thẳng chính diện
+      if (moodName === 'neutral') {
+        if (hasPointer && lastPointerX !== null && lastPointerY !== null) {
+          updateEyeTracking(lastPointerX, lastPointerY);
+        } else {
+          resetEyesToCenter();
+        }
+      } else {
+        resetEyesToCenter();
+      }
+
+      // Khi đổi cảm xúc mạnh: bóng nước bị lệch một nhịp tức thì rồi dội lại về tâm
+      if (typeof triggerWaterImpulse === 'function') {
+        if (moodName === 'surprised') {
+          triggerWaterImpulse(0, 110);
+        } else if (moodName === 'panicked') {
+          triggerWaterImpulse(95, -35);
+        } else if (moodName === 'scared') {
+          triggerWaterImpulse(0, -90);
+        } else if (moodName === 'annoyed') {
+          triggerWaterImpulse(30, 45);
+        }
+      }
+
+      // Nếu là cảm xúc tạm thời (surprised, panicked, embarrassed): tự động quay về neutral sau 2.5 giây
+      if (moodInfo.isTemp) {
+        requestAnimationFrame(() => {
+          timerBarEl.style.transition = 'width 2.5s linear';
+          timerBarEl.style.width = 'calc(100% - 24px)';
+        });
+
+        tempTimer = setTimeout(() => {
+          setMood('neutral');
+        }, 2500);
+      }
+    }
+    // Gắn vào window
+    window.setMood = setMood;
+
+
+    // Áp dụng class CSS cảm xúc vào DOM của nhân vật
+    function applyMoodClass(moodName) {
+      const allClassNames = ALL_MOOD_KEYS.map(k => `mood-${k}`);
+      allClassNames.push('mood-thinking', 'mood-deep_thinking');
+
+      [charPixelEl, charSmoothEl].forEach(el => {
+        el.classList.remove(...allClassNames);
+        el.classList.add(`mood-${moodName}`);
+        if (moodName === 'thinking_old') el.classList.add('mood-thinking');
+        if (moodName === 'deep_thinking_old') el.classList.add('mood-deep_thinking');
+      });
+    }
+
+    // Điều chỉnh độ co dãn của bóng sàn theo từng cảm xúc
+    function updateFloorShadow(mood) {
+      if (mood === 'surprised' || mood === 'excited') {
+        stageShadow.style.transform = 'scale(0.7) translateY(4px)';
+        stageShadow.style.opacity = '0.4';
+      } else if (mood === 'sad' || mood === 'sleepy' || mood === 'scared') {
+        stageShadow.style.transform = 'scale(1.15) translateY(-2px)';
+        stageShadow.style.opacity = '0.85';
+      } else {
+        stageShadow.style.transform = 'scale(1) translateY(0)';
+        stageShadow.style.opacity = '0.7';
+      }
+    }
+
+
+    // --- 4. TƯƠNG TÁC CON TRỎ CHUỘT / NGÓN TAY (EYE TRACKING) ---
+    // Biến lưu vị trí con trỏ chuột gần nhất và trạng thái con trỏ
+    let lastPointerX = null;
+    let lastPointerY = null;
+    let hasPointer = false;
+
+    // Đồng hồ 8 FPS cho nhân vật pixel: Đúng nhịp 125ms (1/8 giây), giữ nguyên giữa 2 lần cập nhật
+    const PIXEL_FPS = 8;
+    const PIXEL_FRAME_MS = 1000 / PIXEL_FPS; // 125ms
+    let pendingPixelX = 0;
+    let pendingPixelY = 0;
+    let renderedPixelX = 0;
+    let renderedPixelY = 0;
+
+    // Vòng lặp đồng hồ 8 FPS: Chỉ cập nhật tọa độ mắt pixel mỗi 1/8 giây
+    setInterval(() => {
+      if (pendingPixelX !== renderedPixelX || pendingPixelY !== renderedPixelY) {
+        renderedPixelX = pendingPixelX;
+        renderedPixelY = pendingPixelY;
+        document.documentElement.style.setProperty('--look-x-pixel', `${renderedPixelX}px`);
+        document.documentElement.style.setProperty('--look-y-pixel', `${renderedPixelY}px`);
+      }
+    }, PIXEL_FRAME_MS);
+
+    // Đặt mắt nhìn thẳng chính diện (0, 0) cho cả bản Smooth và Pixel
+    function resetEyesToCenter() {
+      // Cho Smooth: Biến float về 0px (có transition mượt)
+      document.documentElement.style.setProperty('--look-x', '0px');
+      document.documentElement.style.setProperty('--look-y', '0px');
+
+      // Cho Pixel: Reset ngay bộ đệm và biến CSS theo nhịp 8 FPS
+      pendingPixelX = 0;
+      pendingPixelY = 0;
+      renderedPixelX = 0;
+      renderedPixelY = 0;
+      document.documentElement.style.setProperty('--look-x-pixel', '0px');
+      document.documentElement.style.setProperty('--look-y-pixel', '0px');
+    }
+
+    // Tính toán góc và độ liếc mắt theo con trỏ chuột
+    function updateEyeTracking(clientX, clientY) {
+      const rect = stageEl.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      const deltaX = clientX - centerX;
+      const deltaY = clientY - centerY;
+
+      // Giới hạn biên độ di chuyển mắt
+      const maxSmoothX = 14;
+      const maxSmoothY = 10;
+      const factorX = deltaX / (rect.width * 0.45);
+      const factorY = deltaY / (rect.height * 0.45);
+
+      const lookX = Math.max(-maxSmoothX, Math.min(maxSmoothX, factorX * maxSmoothX));
+      const lookY = Math.max(-maxSmoothY, Math.min(maxSmoothY, factorY * maxSmoothY));
+
+      // Cho phiên bản Smooth: Tọa độ float mượt cập nhật ngay lập tức
+      document.documentElement.style.setProperty('--look-x', `${lookX.toFixed(2)}px`);
+      document.documentElement.style.setProperty('--look-y', `${lookY.toFixed(2)}px`);
+
+      // Cho phiên bản Pixel: Làm tròn theo lưới pixel nguyên số và gửi vào bộ đệm 8 FPS
+      pendingPixelX = Math.round(lookX / 5);
+      pendingPixelY = Math.round(lookY / 5);
+    }
+
+    function handlePointerMove(clientX, clientY) {
+      lastPointerX = clientX;
+      lastPointerY = clientY;
+      hasPointer = true;
+
+      // CHỈ DUY NHẤT trạng thái 'neutral' mới kích hoạt liếc mắt theo con trỏ chuột
+      if (currentMood === 'neutral') {
+        updateEyeTracking(clientX, clientY);
+      }
+    }
+
+    // Sự kiện chuột trên máy tính
+    window.addEventListener('mousemove', (e) => {
+      handlePointerMove(e.clientX, e.clientY);
+    });
+
+    // Sự kiện cảm ứng trên điện thoại
+    window.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+
+    // Khi chuột rời khỏi cửa sổ: Nếu đang ở neutral thì từ từ nhìn về chính diện
+    document.addEventListener('mouseleave', () => {
+      hasPointer = false;
+      if (currentMood === 'neutral') {
+        resetEyesToCenter();
+      }
+    });
+
+
+    // --- 5. CHỚP MẮT TỰ NHIÊN (3 - 6 GIÂY / LẦN) ---
+    function scheduleNextBlink() {
+      // Khoảng thời gian ngẫu nhiên 3000ms - 6000ms
+      const delay = 3000 + Math.random() * 3000;
+      blinkTimer = setTimeout(() => {
+        triggerBlink();
+        scheduleNextBlink();
+      }, delay);
+    }
+
+    function triggerBlink() {
+      // Không chớp khi đang ngủ, đang bị lỗi (mắt X), hoặc mắt trái tim
+      if (currentMood === 'sleepy' || currentMood === 'error' || currentMood === 'love') {
+        return;
+      }
+
+      charPixelEl.classList.add('is-blinking');
+      charSmoothEl.classList.add('is-blinking');
+
+      // Cho Pixel: Khép mi mắt đúng 1 frame của 8 FPS (125ms), bật mở dứt khoát
+      setTimeout(() => {
+        charPixelEl.classList.remove('is-blinking');
+      }, PIXEL_FRAME_MS);
+
+      // Cho Smooth: Khép mi mắt mượt mà 140ms
+      setTimeout(() => {
+        charSmoothEl.classList.remove('is-blinking');
+      }, 140);
+    }
+
+    // Nút kích hoạt chớp mắt thủ công
+    function triggerManualBlink() {
+      triggerBlink();
+    }
+
+
+    // --- 6. CHẾ ĐỘ TỰ ĐỘNG DUYỆT TẤT CẢ CẢM XÚC (Auto Tour) ---
+    function toggleAutoTour() {
+      if (isAutoTourRunning) {
+        stopAutoTour();
+      } else {
+        startAutoTour();
+      }
+    }
+
+    function startAutoTour() {
+      isAutoTourRunning = true;
+      btnAutoTour.classList.add('active');
+      btnAutoTour.innerHTML = '<span>⏹</span> Dừng demo';
+
+      let index = ALL_MOOD_KEYS.indexOf(currentMood);
+      autoTourTimer = setInterval(() => {
+        index = (index + 1) % ALL_MOOD_KEYS.length;
+        setMood(ALL_MOOD_KEYS[index]);
+      }, 2000);
+    }
+
+    function stopAutoTour() {
+      isAutoTourRunning = false;
+      btnAutoTour.classList.remove('active');
+      btnAutoTour.innerHTML = '<span>▶</span> Tự động demo';
+      if (autoTourTimer) {
+        clearInterval(autoTourTimer);
+        autoTourTimer = null;
+      }
+    }
+
+
+    // Nút tải về toàn bộ file HTML đơn nhất
+    function downloadHtml() {
+      const fullHtml = '<!doctype html>\n' + document.documentElement.outerHTML;
+      const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'cat-orb-emotions.html';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    }
+    window.downloadHtml = downloadHtml;
+
+    // --- 7. MÔ PHỎNG VẬT LÝ LÒ XO CHO BÓNG NƯỚC (BƯỚC CỐ ĐỊNH 1/120 GIÂY) ---
+    // Lớp bóng nước nằm PHÍA SAU thân orb.
+    // Khi orb chuyển động: bóng nước trễ lại theo lò xo, tâm lệch ngược chiều vận tốc.
+    // Phía trễ (sau chuyển động) lấp ló lộ ra dày hơn, phía đi tới bị thân orb che lấp (thụt vào trong).
+    const SMOOTH_ORB_BODY = document.querySelector('#char-smooth .orb-body');
+    const FIXED_PHYSICS_DT = 1 / 120; // 120Hz (1/120s)
+
+    let waterLagX = 0;
+    let waterLagY = 0;
+    let waterVelX = 0;
+    let waterVelY = 0;
+
+    let lastOrbScreenX = null;
+    let lastOrbScreenY = null;
+    let smoothSpringTime = 0;
+
+    const WATER_K = 155;        // Độ cứng lò xo (stiffness)
+    const WATER_C = 14.2;       // Giảm chấn (damping)
+    const MAX_LAG_OFFSET = 4.4; // Lệch tâm tối đa ~7.2% bán kính (6-8% của r=61)
+
+    // Hàm tạo xung lực khi đổi cảm xúc mạnh
+    function triggerWaterImpulse(impulseX, impulseY) {
+      waterVelX += impulseX;
+      waterVelY += impulseY;
+    }
+    window.triggerWaterImpulse = triggerWaterImpulse;
+
+    setInterval(() => {
+      smoothSpringTime += FIXED_PHYSICS_DT;
+
+      let velX = 0;
+      let velY = 0;
+      let speed = 0;
+
+      if (SMOOTH_ORB_BODY) {
+        const rect = SMOOTH_ORB_BODY.getBoundingClientRect();
+        const curX = rect.left + rect.width / 2;
+        const curY = rect.top + rect.height / 2;
+
+        if (lastOrbScreenX !== null && lastOrbScreenY !== null) {
+          velX = (curX - lastOrbScreenX) / FIXED_PHYSICS_DT;
+          velY = (curY - lastOrbScreenY) / FIXED_PHYSICS_DT;
+          speed = Math.hypot(velX, velY);
+        }
+
+        lastOrbScreenX = curX;
+        lastOrbScreenY = curY;
+      }
+
+      // Vận tốc thân orb kéo lệch tâm bóng nước trễ lại (ngược chiều chuyển động)
+      let targetLagX = 0;
+      let targetLagY = 0;
+      if (speed > 2) {
+        targetLagX = -velX * 0.015;
+        targetLagY = -velY * 0.015;
+
+        // Giới hạn targetLag trong bán kính tối đa
+        const targetDist = Math.hypot(targetLagX, targetLagY);
+        if (targetDist > MAX_LAG_OFFSET) {
+          targetLagX = (targetLagX / targetDist) * MAX_LAG_OFFSET;
+          targetLagY = (targetLagY / targetDist) * MAX_LAG_OFFSET;
+        }
+      }
+
+      // Phương trình lò xo 2D: F = -k * (x - target) - c * v
+      const fx = -WATER_K * (waterLagX - targetLagX) - WATER_C * waterVelX;
+      const fy = -WATER_K * (waterLagY - targetLagY) - WATER_C * waterVelY;
+
+      waterVelX += fx * FIXED_PHYSICS_DT;
+      waterVelY += fy * FIXED_PHYSICS_DT;
+
+      waterLagX += waterVelX * FIXED_PHYSICS_DT;
+      waterLagY += waterVelY * FIXED_PHYSICS_DT;
+
+      // Giới hạn độ lệch tâm tối đa 6-8% bán kính (không để bóng nước tách rời khỏi thân)
+      const curDist = Math.hypot(waterLagX, waterLagY);
+      if (curDist > MAX_LAG_OFFSET) {
+        waterLagX = (waterLagX / curDist) * MAX_LAG_OFFSET;
+        waterLagY = (waterLagY / curDist) * MAX_LAG_OFFSET;
+      }
+
+      // Squash & stretch rất nhẹ theo hướng chuyển động (tối đa 3%)
+      let deformD = 0;
+      let motionAngle = 0;
+      if (curDist > 0.15) {
+        motionAngle = Math.atan2(waterLagY, waterLagX);
+        deformD = Math.min(0.028, curDist * 0.0055);
+      } else {
+        // Khi đứng yên: gần như đứng yên, chỉ phình xẹp cực nhẹ (dao động ±0.5%, chu kỳ chậm)
+        deformD = 0.0045 * Math.sin(smoothSpringTime * 1.5);
+      }
+
+      // Áp dụng độ lệch tâm và méo nhẹ trực tiếp lên lớp bóng nước
+      const rimWaterEl = document.querySelector('#char-smooth .orb-rim-water');
+      if (rimWaterEl) {
+        rimWaterEl.style.transform = `translate(${waterLagX.toFixed(2)}px, ${waterLagY.toFixed(2)}px) rotate(${motionAngle.toFixed(3)}rad) scale(${1 + deformD}, ${1 - deformD}) rotate(${-motionAngle.toFixed(3)}rad)`;
+      }
+    }, 1000 / 120);
+
+
+    // --- 8. TÍNH NĂNG QUAY CLIP & TẢI VIDEO (MP4 / WEBM) ---
+    let isRecordingVideo = false;
+    let recordingTimerInterval = null;
+
+    function getSupportedVideoMimeType() {
+      const candidates = [
+        'video/mp4;codecs=avc1',
+        'video/mp4',
+        'video/webm;codecs=vp9',
+        'video/webm;codecs=vp8',
+        'video/webm'
+      ];
+      for (const mime of candidates) {
+        if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(mime)) {
+          return mime;
+        }
+      }
+      return 'video/webm';
+    }
+
+    async function startVideoRecording() {
+      if (isRecordingVideo) return;
+
+      if (typeof MediaRecorder === 'undefined') {
+        alert('Trình duyệt hiện tại không hỗ trợ MediaRecorder. Bạn có thể dùng tính năng quay màn hình có sẵn trên điện thoại!');
+        return;
+      }
+
+      isRecordingVideo = true;
+      const btnRecord = document.getElementById('btn-record-video');
+      const badge = document.getElementById('recording-badge');
+      const timerText = document.getElementById('recording-timer-text');
+
+      if (btnRecord) {
+        btnRecord.classList.add('recording-active');
+        btnRecord.innerHTML = '<span>🔴</span> Đang quay...';
+      }
+      if (badge) badge.style.display = 'flex';
+
+      // Tạo canvas ẩn độ nét cao 480x480
+      const canvas = document.createElement('canvas');
+      canvas.width = 480;
+      canvas.height = 480;
+      const ctx = canvas.getContext('2d');
+
+      const mimeType = getSupportedVideoMimeType();
+      const isMp4 = mimeType.includes('mp4');
+      const fileExt = isMp4 ? 'mp4' : 'webm';
+
+      let stream;
+      try {
+        stream = canvas.captureStream(30);
+      } catch (err) {
+        console.error('Không thể captureStream từ canvas:', err);
+        resetRecordingUI();
+        alert('Trình duyệt không hỗ trợ quay canvas. Hãy dùng tính năng quay màn hình điện thoại nhé!');
+        return;
+      }
+
+      let recorder;
+      try {
+        recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 3000000 });
+      } catch (e) {
+        recorder = new MediaRecorder(stream);
+      }
+
+      const recordedChunks = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      recorder.onstop = () => {
+        resetRecordingUI();
+        const blob = new Blob(recordedChunks, { type: recorder.mimeType || mimeType });
+        const videoUrl = URL.createObjectURL(blob);
+        const fileName = `cat-orb-${currentMood}-${currentCharacter}.${fileExt}`;
+
+        // Hiển thị modal xem lại video và tự động kích hoạt tải xuống
+        showVideoModal(videoUrl, fileName);
+
+        // Kích hoạt tải tự động
+        const autoLink = document.createElement('a');
+        autoLink.href = videoUrl;
+        autoLink.download = fileName;
+        document.body.appendChild(autoLink);
+        autoLink.click();
+        document.body.removeChild(autoLink);
+      };
+
+      recorder.start();
+
+      // Đếm ngược 3.2 giây
+      const totalDuration = 3200; // 3.2s
+      const startTime = performance.now();
+
+      recordingTimerInterval = setInterval(() => {
+        const elapsed = performance.now() - startTime;
+        const remain = Math.max(0, (totalDuration - elapsed) / 1000);
+        if (timerText) timerText.textContent = `Đang quay: ${remain.toFixed(1)}s`;
+      }, 100);
+
+      // Vòng lặp vẽ snapshot lên canvas ở 30 FPS
+      let animFrameId;
+      const frameInterval = 1000 / 30;
+      let lastFrameTime = performance.now();
+      let recordingFrameSeq = 0;
+      let latestDrawnSeq = 0;
+
+      function renderRecordingFrame(now) {
+        if (!isRecordingVideo) return;
+
+        if (now - lastFrameTime >= frameInterval) {
+          lastFrameTime = now;
+
+          // Lấy SVG nhân vật đang hiển thị
+          const activeSvg = currentCharacter === 'pixel'
+            ? document.querySelector('#char-pixel svg')
+            : document.querySelector('#char-smooth svg');
+
+          if (activeSvg) {
+            // Tỷ lệ chuyển đổi từ pixel màn hình sang đơn vị viewBox của SVG
+            const svgRect = activeSvg.getBoundingClientRect();
+            const vb = activeSvg.viewBox && activeSvg.viewBox.baseVal;
+            const vbWidth = (vb && vb.width > 0) ? vb.width : (currentCharacter === 'pixel' ? 32 : 200);
+            const vbHeight = (vb && vb.height > 0) ? vb.height : (currentCharacter === 'pixel' ? 32 : 200);
+            const scaleX = svgRect.width > 0 ? (svgRect.width / vbWidth) : 1;
+            const scaleY = svgRect.height > 0 ? (svgRect.height / vbHeight) : 1;
+
+            // Tạo bản sao kèm style đã tính toán
+            const clone = activeSvg.cloneNode(true);
+            const origEls = activeSvg.querySelectorAll('*');
+            const cloneEls = clone.querySelectorAll('*');
+
+            for (let i = 0; i < origEls.length; i++) {
+              const o = origEls[i];
+              const c = cloneEls[i];
+              const tag = c.tagName ? c.tagName.toLowerCase() : '';
+              if (tag === 'defs' || tag === 'lineargradient' || tag === 'radialgradient' || tag === 'stop') {
+                continue;
+              }
+
+              const cs = window.getComputedStyle(o);
+              const tf = cs.transform;
+
+              // Chuyển đổi transform từ pixel màn hình sang SVG viewBox units và gán vào thuộc tính SVG transform chuẩn
+              if (tf && tf !== 'none') {
+                const m2d = tf.match(/^matrix\(([^)]+)\)$/);
+                if (m2d) {
+                  const p = m2d[1].split(',').map(s => parseFloat(s.trim()));
+                  if (p.length === 6) {
+                    const a = p[0];
+                    const b = p[1];
+                    const cVal = p[2];
+                    const d = p[3];
+                    const e = p[4] / scaleX;
+                    const f = p[5] / scaleY;
+                    c.setAttribute('transform', `matrix(${a}, ${b}, ${cVal}, ${d}, ${e}, ${f})`);
+                    c.style.transform = 'none';
+                  }
+                } else {
+                  const m3d = tf.match(/^matrix3d\(([^)]+)\)$/);
+                  if (m3d) {
+                    const p = m3d[1].split(',').map(s => parseFloat(s.trim()));
+                    if (p.length === 16) {
+                      const a = p[0];
+                      const b = p[1];
+                      const cVal = p[4];
+                      const d = p[5];
+                      const e = p[12] / scaleX;
+                      const f = p[13] / scaleY;
+                      c.setAttribute('transform', `matrix(${a}, ${b}, ${cVal}, ${d}, ${e}, ${f})`);
+                      c.style.transform = 'none';
+                    }
+                  }
+                }
+              } else {
+                c.removeAttribute('transform');
+                c.style.transform = 'none';
+              }
+
+              // Sao chép opacity, display, visibility, filter
+              if (cs.opacity !== undefined) {
+                c.setAttribute('opacity', cs.opacity);
+                c.style.opacity = cs.opacity;
+              }
+              if (cs.display === 'none') {
+                c.setAttribute('display', 'none');
+                c.style.display = 'none';
+              } else {
+                c.removeAttribute('display');
+                c.style.display = '';
+              }
+              if (cs.visibility === 'hidden') {
+                c.setAttribute('visibility', 'hidden');
+                c.style.visibility = 'hidden';
+              } else {
+                c.removeAttribute('visibility');
+                c.style.visibility = '';
+              }
+              if (cs.filter && cs.filter !== 'none') {
+                c.style.filter = cs.filter;
+              }
+              if (cs.borderRadius) {
+                c.style.borderRadius = cs.borderRadius;
+              }
+            }
+
+            clone.setAttribute('width', '480');
+            clone.setAttribute('height', '480');
+            if (currentCharacter === 'pixel') {
+              clone.setAttribute('shape-rendering', 'crispEdges');
+              clone.style.shapeRendering = 'crispEdges';
+              clone.style.imageRendering = 'pixelated';
+            }
+
+            const xml = new XMLSerializer().serializeToString(clone);
+            const svgBlob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+            const img = new Image();
+            const currentSeq = ++recordingFrameSeq;
+
+            img.onload = () => {
+              if (currentSeq >= latestDrawnSeq) {
+                latestDrawnSeq = currentSeq;
+                // Vẽ nền tối sân khấu
+                ctx.fillStyle = '#0c0d10';
+                ctx.fillRect(0, 0, 480, 480);
+
+                // Vẽ bóng sàn nhẹ dưới chân orb
+                ctx.beginPath();
+                ctx.ellipse(240, 375, 110, 16, 0, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+                ctx.fill();
+
+                // Chế độ khử răng cưa của canvas theo nhân vật
+                if (currentCharacter === 'pixel') {
+                  ctx.imageSmoothingEnabled = false;
+                } else {
+                  ctx.imageSmoothingEnabled = true;
+                }
+
+                // Vẽ nhân vật ở giữa khung hình
+                ctx.drawImage(img, 0, 0, 480, 480);
+              }
+              URL.revokeObjectURL(url);
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(url);
+            };
+            img.src = url;
+          }
+        }
+
+        if (performance.now() - startTime >= totalDuration) {
+          // Hết giờ quay -> Cho phép 120ms để các frame cuối kịp vẽ vào canvas trước khi stop
+          isRecordingVideo = false;
+          cancelAnimationFrame(animFrameId);
+          setTimeout(() => {
+            if (recorder && recorder.state !== 'inactive') {
+              recorder.stop();
+            }
+          }, 120);
+        } else {
+          animFrameId = requestAnimationFrame(renderRecordingFrame);
+        }
+      }
+
+      animFrameId = requestAnimationFrame(renderRecordingFrame);
+    }
+
+    function resetRecordingUI() {
+      isRecordingVideo = false;
+      if (recordingTimerInterval) {
+        clearInterval(recordingTimerInterval);
+        recordingTimerInterval = null;
+      }
+      const btnRecord = document.getElementById('btn-record-video');
+      const badge = document.getElementById('recording-badge');
+      if (btnRecord) {
+        btnRecord.classList.remove('recording-active');
+        btnRecord.innerHTML = '<span>🎬</span> Quay clip (3s)';
+      }
+      if (badge) badge.style.display = 'none';
+    }
+
+    function showVideoModal(videoUrl, fileName) {
+      const modal = document.getElementById('video-modal-backdrop');
+      const videoPlayer = document.getElementById('recorded-video-player');
+      const downloadBtn = document.getElementById('video-download-btn');
+
+      if (videoPlayer) {
+        videoPlayer.src = videoUrl;
+        videoPlayer.play().catch(() => {});
+      }
+      if (downloadBtn) {
+        downloadBtn.href = videoUrl;
+        downloadBtn.download = fileName;
+      }
+      if (modal) {
+        modal.style.display = 'flex';
+      }
+    }
+
+    function closeVideoModal(e) {
+      const modal = document.getElementById('video-modal-backdrop');
+      const videoPlayer = document.getElementById('recorded-video-player');
+      if (videoPlayer) {
+        videoPlayer.pause();
+        videoPlayer.src = '';
+      }
+      if (modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    window.startVideoRecording = startVideoRecording;
+    window.closeVideoModal = closeVideoModal;
+
+
+    // ==========================================================================
+    // 9. BẢNG CHẨN ĐOÁN XUẤT VIDEO TRÊN THIẾT BỊ (DEVICE DIAGNOSTICS)
+    // - Kiểm tra môi trường, WebCodecs, MediaRecorder, mp4-muxer CDN, Canvas Benchmark
+    // ==========================================================================
+    function openDiagnosticsModal() {
+      const modal = document.getElementById('diag-modal-backdrop');
+      if (modal) {
+        modal.style.display = 'flex';
+        runDeviceDiagnostics();
+      }
+    }
+
+    function closeDiagModal(e) {
+      const modal = document.getElementById('diag-modal-backdrop');
+      if (modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    async function copyDiagResults() {
+      const outputEl = document.getElementById('diag-output');
+      const fallbackArea = document.getElementById('diag-copy-fallback');
+      const statusEl = document.getElementById('diag-status');
+      if (!outputEl) return;
+      const text = outputEl.textContent;
+
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          if (statusEl) statusEl.textContent = '📋 Đã copy toàn bộ kết quả chẩn đoán vào Clipboard!';
+          return;
+        }
+        throw new Error('Clipboard API không khả dụng');
+      } catch (err) {
+        if (fallbackArea) {
+          fallbackArea.value = text;
+          fallbackArea.focus();
+          fallbackArea.select();
+          try {
+            document.execCommand('copy');
+            if (statusEl) statusEl.textContent = '📋 Đã copy kết quả vào Clipboard (qua fallback)!';
+            return;
+          } catch (e2) {}
+        }
+        // Chọn sẵn văn bản để người dùng tự copy
+        const range = document.createRange();
+        range.selectNodeContents(outputEl);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        if (statusEl) statusEl.textContent = '⚠️ Trình duyệt chặn tự động copy. Toàn bộ văn bản đã được chọn (bôi đen), vui lòng nhấn Ctrl+C hoặc chạm Copy!';
+      }
+    }
+
+    function testDownloadFiles() {
+      const statusEl = document.getElementById('diag-status');
+      const logLines = [];
+
+      try {
+        // File 1: bon-test.txt
+        const txtBlob = new Blob(['test diagnostic text từ Cat Orb App\nThời gian: ' + new Date().toISOString()], { type: 'text/plain' });
+        const txtUrl = URL.createObjectURL(txtBlob);
+        const aTxt = document.createElement('a');
+        aTxt.href = txtUrl;
+        aTxt.download = 'bon-test.txt';
+        document.body.appendChild(aTxt);
+        aTxt.click();
+        document.body.removeChild(aTxt);
+        setTimeout(() => URL.revokeObjectURL(txtUrl), 1500);
+        logLines.push('bon-test.txt: Đã kích hoạt tải');
+      } catch (errTxt) {
+        logLines.push('bon-test.txt: LỖI - ' + (errTxt.message || String(errTxt)));
+      }
+
+      try {
+        // File 2: bon-test.mp4 (vài byte giả định dạng MP4 ftyp header)
+        const mp4Bytes = new Uint8Array([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0x00, 0x00, 0x02, 0x00, 0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32]);
+        const mp4Blob = new Blob([mp4Bytes], { type: 'video/mp4' });
+        const mp4Url = URL.createObjectURL(mp4Blob);
+        const aMp4 = document.createElement('a');
+        aMp4.href = mp4Url;
+        aMp4.download = 'bon-test.mp4';
+        document.body.appendChild(aMp4);
+        aMp4.click();
+        document.body.removeChild(aMp4);
+        setTimeout(() => URL.revokeObjectURL(mp4Url), 1500);
+        logLines.push('bon-test.mp4: Đã kích hoạt tải');
+      } catch (errMp4) {
+        logLines.push('bon-test.mp4: LỖI - ' + (errMp4.message || String(errMp4)));
+      }
+
+      if (statusEl) {
+        statusEl.textContent = '📥 ' + logLines.join(' | ') + '. Vui lòng kiểm tra thư mục Tải về (Downloads) trên máy bạn!';
+      }
+    }
+
+    async function runDeviceDiagnostics() {
+      const outputEl = document.getElementById('diag-output');
+      const statusEl = document.getElementById('diag-status');
+      if (!outputEl) return;
+
+      if (statusEl) statusEl.textContent = '⏳ Đang chạy các bước kiểm tra thực tế trên thiết bị, vui lòng đợi...';
+      outputEl.textContent = 'Đang bắt đầu chẩn đoán...\n';
+
+      const lines = [];
+      function add(line) {
+        lines.push(line);
+        outputEl.textContent = lines.join('\n');
+        outputEl.scrollTop = outputEl.scrollHeight;
+      }
+
+      // 1. Môi trường
+      add('=== 1. MÔI TRƯỜNG THIẾT BỊ ===');
+      try { add('navigator.userAgent: ' + navigator.userAgent); } catch(e) { add('navigator.userAgent: Lỗi - ' + e.message); }
+      try { add('navigator.platform: ' + navigator.platform); } catch(e) { add('navigator.platform: Lỗi - ' + e.message); }
+      try { add('hardwareConcurrency: ' + navigator.hardwareConcurrency); } catch(e) { add('hardwareConcurrency: Lỗi - ' + e.message); }
+      try { add('deviceMemory: ' + (navigator.deviceMemory !== undefined ? (navigator.deviceMemory + ' GB') : 'không hỗ trợ')); } catch(e) { add('deviceMemory: Lỗi - ' + e.message); }
+      try { add('devicePixelRatio: ' + window.devicePixelRatio); } catch(e) { add('devicePixelRatio: Lỗi - ' + e.message); }
+      try {
+        const scr = window.screen;
+        add('kích thước cửa sổ: ' + window.innerWidth + 'x' + window.innerHeight + ' (screen: ' + (scr ? (scr.width + 'x' + scr.height) : 'n/a') + ')');
+      } catch(e) { add('kích thước cửa sổ: Lỗi - ' + e.message); }
+      try { add('trong iframe: ' + (window.self !== window.top ? 'Có (true)' : 'Không (false)')); } catch(e) { add('trong iframe: Lỗi - ' + e.message); }
+      try { add('location.href: ' + location.href); } catch(e) { add('location.href: Lỗi - ' + e.message); }
+      try { add('isSecureContext: ' + window.isSecureContext); } catch(e) { add('isSecureContext: Lỗi - ' + e.message); }
+      add('');
+
+      // 2. WebCodecs
+      add('=== 2. WEBCODECS API ===');
+      try { add('typeof VideoEncoder: ' + (typeof VideoEncoder)); } catch(e) { add('typeof VideoEncoder: Lỗi - ' + e.message); }
+      try { add('typeof VideoFrame: ' + (typeof VideoFrame)); } catch(e) { add('typeof VideoFrame: Lỗi - ' + e.message); }
+      try { add('typeof VideoDecoder: ' + (typeof VideoDecoder)); } catch(e) { add('typeof VideoDecoder: Lỗi - ' + e.message); }
+      add('');
+
+      // 3. VideoEncoder.isConfigSupported
+      add('=== 3. VIDEOENCODER.ISCONFIGSUPPORTED (H.264) ===');
+      let firstSupportedConfig = null;
+      let supportedCount = 0;
+      let totalCombinations = 0;
+
+      if (typeof VideoEncoder === 'undefined') {
+        add('VideoEncoder: KHÔNG HỖ TRỢ trên trình duyệt này.');
+      } else {
+        const testCodecs = ["avc1.42001f", "avc1.4d0028", "avc1.640028"];
+        const testSizes = [
+          { label: '512x512', w: 512, h: 512 },
+          { label: '720x720', w: 720, h: 720 },
+          { label: '1024x1024', w: 1024, h: 1024 }
+        ];
+        const testFramerates = [30, 60];
+        const testHwList = [
+          { label: 'mặc định', val: undefined },
+          { label: 'prefer-hardware', val: 'prefer-hardware' },
+          { label: 'prefer-software', val: 'prefer-software' }
+        ];
+
+        for (const c of testCodecs) {
+          for (const s of testSizes) {
+            for (const fps of testFramerates) {
+              for (const hw of testHwList) {
+                totalCombinations++;
+                const cfg = {
+                  codec: c,
+                  width: s.w,
+                  height: s.h,
+                  bitrate: 4000000,
+                  framerate: fps
+                };
+                if (hw.val) cfg.hardwareAcceleration = hw.val;
+
+                const name = `${c} | ${s.label} | ${fps}fps | 4Mbps | hw:${hw.label}`;
+                try {
+                  const check = await VideoEncoder.isConfigSupported(cfg);
+                  const isOk = check && check.supported === true;
+                  if (isOk) {
+                    supportedCount++;
+                    if (!firstSupportedConfig) firstSupportedConfig = cfg;
+                    add(`${name}: supported = true (config: ${JSON.stringify(check.config || cfg)})`);
+                  } else {
+                    add(`${name}: supported = false`);
+                  }
+                } catch (errCfg) {
+                  add(`${name}: Lỗi - ${errCfg.message || String(errCfg)}`);
+                }
+              }
+            }
+          }
+        }
+        add(`Tổng kết isConfigSupported: ${supportedCount}/${totalCombinations} tổ hợp được hỗ trợ.`);
+      }
+      add('');
+
+      // 4. Thử mã hóa thật 30 khung
+      add('=== 4. THỬ MÃ HÓA THẬT (30 KHUNG BẰNG VIDEOENCODER) ===');
+      const realChunks = [];
+      let encodeSuccess = false;
+      let encodeDurationMs = 0;
+      let encodeTotalBytes = 0;
+
+      if (typeof VideoEncoder === 'undefined' || typeof VideoFrame === 'undefined') {
+        add('Bỏ qua: Trình duyệt không có VideoEncoder / VideoFrame.');
+      } else if (!firstSupportedConfig) {
+        add('Bỏ qua: Không tìm thấy codec H.264 nào được isConfigSupported báo hỗ trợ.');
+      } else {
+        try {
+          const tCanvas = document.createElement('canvas');
+          tCanvas.width = firstSupportedConfig.width || 512;
+          tCanvas.height = firstSupportedConfig.height || 512;
+          const tCtx = tCanvas.getContext('2d');
+
+          let runtimeEncodeError = null;
+          const encStart = performance.now();
+
+          const testEncoder = new VideoEncoder({
+            output: (chunk, metadata) => {
+              realChunks.push({ chunk, metadata });
+              encodeTotalBytes += chunk.byteLength;
+            },
+            error: (e) => {
+              runtimeEncodeError = e;
+            }
+          });
+
+          testEncoder.configure(firstSupportedConfig);
+
+          for (let i = 0; i < 30; i++) {
+            tCtx.fillStyle = '#0f172a';
+            tCtx.fillRect(0, 0, tCanvas.width, tCanvas.height);
+            tCtx.beginPath();
+            tCtx.arc(tCanvas.width / 2 + Math.sin(i * 0.25) * 80, tCanvas.height / 2, 45, 0, Math.PI * 2);
+            tCtx.fillStyle = '#38bdf8';
+            tCtx.fill();
+            tCtx.fillStyle = '#ffffff';
+            tCtx.font = 'bold 22px sans-serif';
+            tCtx.fillText(`Test Frame ${i + 1}/30`, 24, 40);
+
+            const vFrame = new VideoFrame(tCanvas, { timestamp: i * 33333 }); // ~30 fps (33.3ms = 33333 us)
+            testEncoder.encode(vFrame, { keyFrame: (i === 0 || i % 15 === 0) });
+            vFrame.close();
+          }
+
+          await testEncoder.flush();
+          testEncoder.close();
+          encodeDurationMs = Math.round(performance.now() - encStart);
+
+          if (runtimeEncodeError) {
+            add('Mã hóa thất bại trong khi chạy: ' + (runtimeEncodeError.message || String(runtimeEncodeError)));
+          } else {
+            encodeSuccess = true;
+            add('Kết quả mã hóa: THÀNH CÔNG');
+            add(`Thời gian mã hóa 30 khung: ${encodeDurationMs} ms (~${(30 / (encodeDurationMs / 1000)).toFixed(1)} FPS encoding speed)`);
+            add(`Số chunk nhận được: ${realChunks.length}`);
+            add(`Tổng kích thước bitstream: ${encodeTotalBytes} bytes (${(encodeTotalBytes / 1024).toFixed(1)} KB)`);
+          }
+        } catch (errEnc) {
+          add('Lỗi khi chạy thử mã hóa: ' + (errEnc.message || String(errEnc)));
+        }
+      }
+      add('');
+
+      // 5. Thư viện mp4-muxer từ CDN
+      add('=== 5. THƯ VIỆN MP4-MUXER TỪ CDN ===');
+      let muxerLoadedOk = false;
+      let muxerBlobBytes = 0;
+      const cdnUrl = 'https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js';
+
+      try {
+        if (typeof window.Mp4Muxer === 'undefined') {
+          add('Đang nạp script từ ' + cdnUrl + ' ...');
+          await new Promise((resolve, reject) => {
+            const sc = document.createElement('script');
+            sc.src = cdnUrl;
+            sc.onload = () => resolve();
+            sc.onerror = (ev) => reject(new Error('Lỗi tải script mp4-muxer từ CDN (Kiểm tra kết nối mạng hoặc Content Security Policy / CSP của trang)'));
+            document.head.appendChild(sc);
+          });
+        }
+        add('Nạp script: THÀNH CÔNG');
+        add('typeof Mp4Muxer: ' + (typeof window.Mp4Muxer));
+        muxerLoadedOk = typeof window.Mp4Muxer !== 'undefined';
+
+        if (muxerLoadedOk && realChunks.length > 0 && firstSupportedConfig) {
+          add('Thử ghép 30 chunk ở bước 4 thành container MP4...');
+          const muxer = new window.Mp4Muxer.Muxer({
+            target: new window.Mp4Muxer.ArrayBufferTarget(),
+            video: {
+              codec: 'avc',
+              width: firstSupportedConfig.width || 512,
+              height: firstSupportedConfig.height || 512
+            },
+            fastStart: 'in-memory'
+          });
+
+          for (const item of realChunks) {
+            muxer.addVideoChunk(item.chunk, item.metadata);
+          }
+          muxer.finalize();
+          const mp4Buffer = muxer.target.buffer;
+          const mp4Blob = new Blob([mp4Buffer], { type: 'video/mp4' });
+          muxerBlobBytes = mp4Blob.size;
+          add(`Ghép file MP4: THÀNH CÔNG! Kích thước file: ${muxerBlobBytes} bytes (${(muxerBlobBytes / 1024).toFixed(1)} KB)`);
+        } else if (realChunks.length === 0) {
+          add('Không có chunk video từ bước 4 để thử ghép muxer.');
+        }
+      } catch (errMux) {
+        add('Lỗi mp4-muxer: ' + (errMux.message || String(errMux)));
+      }
+      add('');
+
+      // 6. MediaRecorder
+      add('=== 6. MEDIARECORDER API ===');
+      try { add('typeof MediaRecorder: ' + (typeof MediaRecorder)); } catch(e) { add('typeof MediaRecorder: Lỗi - ' + e.message); }
+      if (typeof MediaRecorder !== 'undefined') {
+        const mrTypes = [
+          "video/mp4",
+          "video/mp4;codecs=avc1",
+          "video/mp4;codecs=h264",
+          "video/webm",
+          "video/webm;codecs=vp9",
+          "video/webm;codecs=vp8"
+        ];
+        for (const t of mrTypes) {
+          try {
+            add(`MediaRecorder.isTypeSupported("${t}"): ${MediaRecorder.isTypeSupported(t)}`);
+          } catch(errT) {
+            add(`MediaRecorder.isTypeSupported("${t}"): Lỗi - ${errT.message}`);
+          }
+        }
+      }
+      try {
+        add('typeof HTMLCanvasElement.prototype.captureStream: ' + (typeof HTMLCanvasElement.prototype.captureStream));
+      } catch(e) { add('typeof HTMLCanvasElement.prototype.captureStream: Lỗi - ' + e.message); }
+      add('');
+
+      // 7. Tiện ích (Screen Wake Lock & navigator.share)
+      add('=== 7. TIỆN ÍCH HỆ THỐNG ===');
+      try { add('typeof navigator.wakeLock: ' + (typeof navigator.wakeLock)); } catch(e) { add('typeof navigator.wakeLock: Lỗi - ' + e.message); }
+      try { add('typeof navigator.share: ' + (typeof navigator.share)); } catch(e) { add('typeof navigator.share: Lỗi - ' + e.message); }
+      try {
+        if (typeof navigator.canShare === 'function') {
+          try {
+            const dummyFile = new File([new Uint8Array([0, 1, 2, 3])], 'sample.mp4', { type: 'video/mp4' });
+            add('navigator.canShare với File (video/mp4): ' + navigator.canShare({ files: [dummyFile] }));
+          } catch(errCanShare) {
+            add('navigator.canShare với File (video/mp4): Lỗi khi thử - ' + errCanShare.message);
+          }
+        } else {
+          add('typeof navigator.canShare: ' + (typeof navigator.canShare));
+        }
+      } catch(e) { add('navigator.canShare: Lỗi - ' + e.message); }
+      add('');
+
+      // 8. Tải file
+      add('=== 8. KIỂM TRA TẢI FILE (DOWNLOAD TEST) ===');
+      add('Nút "Tải file thử (txt & mp4)" ở thanh công cụ phía trên đã sẵn sàng.');
+      add('Khi bấm nút, trang tạo Blob bon-test.txt và Blob bon-test.mp4 qua thẻ <a download>.');
+      add('');
+
+      // 9. Đo tốc độ vẽ Canvas (Benchmark 60 frames)
+      add('=== 9. ĐO TỐC ĐỘ VẼ CANVAS (60 KHUNG HÌNH THỬ) ===');
+      try {
+        const benchCanvas = document.createElement('canvas');
+        benchCanvas.width = 480;
+        benchCanvas.height = 480;
+        const bCtx = benchCanvas.getContext('2d');
+        const bStart = performance.now();
+
+        for (let i = 0; i < 60; i++) {
+          bCtx.clearRect(0, 0, 480, 480);
+          // Nền sân khấu
+          bCtx.fillStyle = '#0c0d10';
+          bCtx.fillRect(0, 0, 480, 480);
+          // Bóng sàn
+          bCtx.beginPath();
+          bCtx.ellipse(240, 375, 110, 16, 0, 0, Math.PI * 2);
+          bCtx.fillStyle = 'rgba(0,0,0,0.6)';
+          bCtx.fill();
+          // Thân orb
+          bCtx.beginPath();
+          bCtx.arc(240, 240 + Math.sin(i * 0.1) * 6, 120, 0, Math.PI * 2);
+          bCtx.fillStyle = '#0f1117';
+          bCtx.fill();
+          bCtx.lineWidth = 4;
+          bCtx.strokeStyle = '#2d3343';
+          bCtx.stroke();
+          // Tai trái & phải
+          bCtx.beginPath();
+          bCtx.moveTo(170, 150);
+          bCtx.lineTo(140, 80);
+          bCtx.lineTo(210, 120);
+          bCtx.closePath();
+          bCtx.fillStyle = '#0f1117';
+          bCtx.fill();
+          bCtx.beginPath();
+          bCtx.moveTo(310, 150);
+          bCtx.lineTo(340, 80);
+          bCtx.lineTo(270, 120);
+          bCtx.closePath();
+          bCtx.fillStyle = '#0f1117';
+          bCtx.fill();
+          // Mắt
+          bCtx.fillStyle = '#ffffff';
+          bCtx.beginPath();
+          bCtx.ellipse(200, 230, 14, 18, 0, 0, Math.PI * 2);
+          bCtx.fill();
+          bCtx.beginPath();
+          bCtx.ellipse(280, 230, 14, 18, 0, 0, Math.PI * 2);
+          bCtx.fill();
+        }
+
+        const bTotalMs = performance.now() - bStart;
+        const bAvgFrameMs = (bTotalMs / 60).toFixed(2);
+        const bEstFps = Math.round(1000 / (bTotalMs / 60));
+        add(`Tổng thời gian vẽ 60 khung: ${bTotalMs.toFixed(1)} ms`);
+        add(`Thời gian trung bình mỗi khung: ${bAvgFrameMs} ms/khung (~${bEstFps} FPS render offline)`);
+      } catch (errBench) {
+        add('Lỗi khi benchmark canvas: ' + (errBench.message || String(errBench)));
+      }
+      add('');
+
+      // 10. TỔNG KẾT TỰ SUY RA
+      add('=== 10. TỔNG KẾT TỰ SUY RA TỪ KẾT QUẢ THIẾT BỊ ===');
+      const canWebCodecsMp4 = (typeof VideoEncoder !== 'undefined') && (firstSupportedConfig !== null) && encodeSuccess && muxerLoadedOk && (muxerBlobBytes > 0);
+      if (canWebCodecsMp4) {
+        add('• Cách A (WebCodecs + mp4-muxer): DÙNG ĐƯỢC vì VideoEncoder hỗ trợ cấu hình H.264, đã mã hóa thành công 30 khung và mp4-muxer nạp được từ CDN để ghép file MP4 hoàn chỉnh.');
+      } else {
+        const reasonsA = [];
+        if (typeof VideoEncoder === 'undefined') reasonsA.push('trình duyệt thiếu VideoEncoder');
+        else if (!firstSupportedConfig) reasonsA.push('không hỗ trợ codec H.264 nào');
+        else if (!encodeSuccess) reasonsA.push('mã hóa khung hình bị lỗi');
+        if (!muxerLoadedOk) reasonsA.push('không nạp được thư viện mp4-muxer');
+        else if (muxerBlobBytes === 0) reasonsA.push('ghép MP4 ra kích thước 0 byte');
+        add('• Cách A (WebCodecs + mp4-muxer): KHÔNG DÙNG ĐƯỢC vì ' + reasonsA.join(', ') + '.');
+      }
+
+      const hasMediaRecorder = typeof MediaRecorder !== 'undefined';
+      const supportsMp4Container = hasMediaRecorder && (
+        MediaRecorder.isTypeSupported('video/mp4') ||
+        MediaRecorder.isTypeSupported('video/mp4;codecs=avc1') ||
+        MediaRecorder.isTypeSupported('video/mp4;codecs=h264')
+      );
+      if (supportsMp4Container) {
+        add('• Cách B (MediaRecorder mp4): DÙNG ĐƯỢC vì MediaRecorder trên trình duyệt này hỗ trợ xuất trực tiếp container video/mp4.');
+      } else {
+        add('• Cách B (MediaRecorder mp4): KHÔNG DÙNG ĐƯỢC vì MediaRecorder không hỗ trợ container video/mp4 (đa số thiết bị Chromium chỉ hỗ trợ webm).');
+      }
+
+      if (statusEl) statusEl.textContent = '✅ Đã hoàn tất chẩn đoán toàn diện! Bạn có thể bấm "Copy kết quả" hoặc "Tải file thử".';
+    }
+
+    window.openDiagnosticsModal = openDiagnosticsModal;
+    window.closeDiagModal = closeDiagModal;
+    window.copyDiagResults = copyDiagResults;
+    window.testDownloadFiles = testDownloadFiles;
+    window.runDeviceDiagnostics = runDeviceDiagnostics;
+
+
+    // --- 10. KHỞI CHẠY LẦN ĐẦU KHI TẢI TRANG ---
+    document.addEventListener('DOMContentLoaded', () => {
+      // Khởi tạo trạng thái mặc định: Smooth & Neutral
+      setCharacter('smooth');
+      setMood('neutral');
+
+      // Bắt đầu vòng lặp chớp mắt ngẫu nhiên
+      scheduleNextBlink();
+    });
+  </script>
+
+
+</body></html>

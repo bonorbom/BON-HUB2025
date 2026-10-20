@@ -1,0 +1,436 @@
+# PROJECT: REALISTIC SOLAR SYSTEM NAVIGATION — MINECRAFT SERVICE DASHBOARD DEMO (v2)
+
+## 0. HOW TO WORK (READ THIS FIRST)
+
+Act as a senior product designer and frontend engineer who also knows 3D web rendering. Build a polished, interactive, responsive frontend demo for managing Minecraft services and modules through a realistic Solar System interface.
+
+This is a **frontend prototype only**. No real authentication, backend, database, VPS workers, payments, or server security.
+
+The most important quality bar in this version: **the interface must look like a restrained, professional tool made by a human design team, not like a generated template.** The 3D planet is the one memorable element. Everything around it stays quiet, flat, and disciplined. Section 3 (Design Contract) is a hard requirement, not polish, and it overrides any default styling habit you have.
+
+Order of work:
+
+1. Understand the context (Section 2).
+2. Write a short `DESIGN.md` (max 60 lines): the tokens from Section 3, the layout for each screen, and 5 principles. Then review it against the banned list in Section 3.9. If any part looks like what you would produce for any generic dashboard, change it and note what you changed.
+3. Build the real, working demo. No stubs, no `// TODO`, no "implement here" comments, no truncated files.
+4. Run the mechanical design audit (Section 3.10) and the acceptance checks (Section 16). Fix what fails.
+5. Report honestly: what works, what does not, what is missing. Never claim a feature works if it was not tested.
+
+## 1. SCOPE
+
+Build actual screens and a working navigation system, not a description and not a static mockup. Run it, test it, fix visible issues.
+
+Do not overengineer. Keep the project small, readable, and data-driven.
+
+## 2. CONTEXT: EXISTING PROJECT OR EMPTY WORKSPACE
+
+**If project files are available:**
+
+1. Inspect the structure: framework, package manager, entry points, components, styles, assets, dependencies.
+2. Find the existing `index` file(s) containing the AI assistant animations (Smooth style: rounded character animation; Pixel style: pixel-art animation). Work out how they are rendered, controlled, and what they depend on.
+3. Reuse the original implementations. Do not replace them with emoji, static images, or unrelated animations. Preserve working code and assets.
+4. Check for an existing 3D or astronomy dependency before adding another.
+
+**If no project files are available (empty workspace or single-prompt environment):**
+
+- Do not invent a cartoon mascot. Build the assistant behind an adapter (`AssistantAvatar` with `style: "smooth" | "pixel"` and `state: "idle" | "greeting" | "thinking"`), using a plain, minimal 2D placeholder (a dark circle with two small eyes drawn in `text` color). The real Smooth/Pixel animations can be dropped in later without changing the rest of the app.
+- Suggested stack: Vite + TypeScript + Three.js. Add `astronomy-engine` (MIT, runs offline in the browser) for planetary positions. Plain CSS with custom properties is preferred. If Tailwind is used, **replace** `theme.colors` entirely with the tokens in Section 3.2 so the default palette (slate, indigo, blue-500, etc.) is unreachable.
+- Do not use a component library with its default theme. If one is used, fully retheme it to the tokens.
+
+If an important asset is missing, create a reasonable fallback and keep the architecture ready for the real asset.
+
+## 3. DESIGN CONTRACT (NON-NEGOTIABLE)
+
+### 3.1 Intent
+
+A professional service-management tool first, a space experience second. Think of the restraint and density of Linear and the Stripe Dashboard, combined with the astronomical honesty of NASA's Eyes on the Solar System and planetarium software such as Stellarium. Take inspiration from the discipline, do not copy any product.
+
+Visual weight order (squint test): 1) the planet, 2) the active panel's title and its primary action, 3) everything else. If anything else competes with the planet, remove it.
+
+### 3.2 Color tokens (use exactly these; do not invent other hues)
+
+Define as CSS custom properties. Never write a raw hex color outside the token file. Never use pure `#000` or `#FFF`.
+
+| Token | Hex | Use |
+|---|---|---|
+| `space` | `#04070D` | App background and canvas background |
+| `panel` | `#0B1017` | Sidebar, content panel, modals (solid, never translucent) |
+| `panel-raised` | `#121923` | Hovered or selected rows, inputs |
+| `line` | `#1E2733` | 1px dividers and panel borders |
+| `line-strong` | `#2C3746` | Input borders, secondary button borders |
+| `text` | `#E6EBF2` | Primary text |
+| `text-muted` | `#9BA7B8` | Secondary text |
+| `text-faint` | `#748093` | Captions only |
+| `accent` | `#7EA6D9` | The only accent (atmospheric blue sampled from Earth's limb) |
+| `ok` | `#6FB58B` | Success status |
+| `warn` | `#D1A95C` | Warning status |
+| `danger` | `#D17A7A` | Error status |
+
+Rules:
+- Neutrals must make up at least 95% of the UI. `accent` is allowed only for: keyboard focus ring, the 2px active-navigation marker, the selected-row marker, links, switch "on" state, and the travel progress indicator. Nothing else.
+- Primary button: `text` fill with `space` text color. Secondary button: transparent with a 1px `line-strong` border. Destructive: `danger` text with a 1px `danger` border at reduced opacity. No colored filled buttons.
+- Status is shown with a 6px dot plus a text label. Never as a filled colored badge, never with a glow.
+- Text contrast: body text at least 4.5:1, large text at least 3:1.
+
+### 3.3 Typography
+
+- Primary family: **IBM Plex Sans** (weights 400, 500, 600). Load with the `vietnamese` and `latin-ext` subsets so Vietnamese diacritics render correctly. Fallback stack: `"IBM Plex Sans", ui-sans-serif, "Segoe UI", sans-serif`.
+- Secondary family: **IBM Plex Mono**, used only for genuinely code-like data (log lines, IDs, keys). Not for ordinary labels or captions.
+- Do not use Inter, Roboto, Arial, Poppins, Space Grotesk, or sci-fi display fonts (Orbitron, Exo, Rajdhani, etc.).
+- Scale (size/line-height): caption 12/16, label 13/18, body 14/20 (default), emphasis 16/24, panel title 20/28, view title 28/34 (once per screen), login and intro title 40/44 (only there). Weights: 400 body, 500 labels, 600 titles. Nothing heavier.
+- Sentence case everywhere. No all-caps labels, no letter-spaced eyebrow labels above headings, no gradient text, no single highlighted word inside a headline.
+- Use `font-variant-numeric: tabular-nums` on every number column and timestamp.
+- Maximum prose line length: 64 characters.
+
+### 3.4 Spacing, radius, borders, elevation
+
+- 4px base grid. Allowed spacing values: 4, 8, 12, 16, 24, 32, 48.
+- Two radii only: **4px** (inputs, buttons, chips, switches) and **8px** (panels, menus, modals). Nothing above 8px. Fully round shapes only for the switch thumb and status dots.
+- No decorative shadows. Separation comes from surface steps (`space` → `panel` → `panel-raised`) and 1px `line` borders. The only allowed shadow is one on floating layers (tooltip, menu, modal): `0 8px 24px rgba(0,0,0,0.5)`.
+- No `backdrop-filter`, no blur, no translucent glass panels. Panels are solid.
+
+### 3.5 Layout
+
+Desktop (1024px and up):
+
+```
+┌──────┬──────────────────────────────┬───────────────┐
+│ nav  │   3D scene (fixed camera)    │ content panel │
+│ rail │                              │ 440px, solid, │
+│ 56 / │   planet centered in the     │ own scroll,   │
+│ 232  │   free area between the      │ closable      │
+│      │   sidebar and the panel      │               │
+│      │   [assistant: bottom-right   │               │
+│      │    of the scene area]        │               │
+└──────┴──────────────────────────────┴───────────────┘
+```
+
+- The "free area" is the viewport minus the sidebar minus the content panel. The planet is centered in the free area. When the sidebar expands or collapses, or the panel opens or closes, the camera view offset eases smoothly (about 240ms) so the planet never jumps or hides.
+- The content panel can be closed (close button and Esc) to show the planet alone. Reopening restores the last view.
+- Content lives in **one solid panel**, not scattered floating cards over the scene.
+- A small plain caption sits at the bottom-left of the scene: the planet's name (emphasis size) and two lines of data such as "Distance from the Sun" and "Orbital period", presented as a simple definition list. No decorative HUD brackets, no joined strings separated by middle dots.
+
+Tablet (768 to 1023px): sidebar collapsed to the icon rail, content panel as an overlay of about 400px.
+
+Mobile (below 768px):
+
+```
+┌────────────────────┐
+│  3D scene (~42% h) │
+├────────────────────┤
+│  content sheet     │  snap states: peek / half / full
+│  scrolls inside    │
+├────────────────────┤
+│  bottom nav, 5     │
+└────────────────────┘
+```
+
+- Touch targets at least 44px. The assistant is a 40px button above the bottom nav, collapsed by default after the greeting.
+- Recalculate camera framing on resize and orientation change.
+
+### 3.6 Components
+
+- **Lists, not card grids.** Modules, services, activity, and Explore are rows inside one bordered container with 1px dividers and aligned columns (row height 48px, or 40px for dense logs). Hover: `panel-raised`. Selected: `panel-raised` plus a 2px `accent` bar on the left edge.
+- **Dashboard summary:** a plain definition list and a few rows. No "stat cards" with a big number, delta arrow, and sparkline. At most one large numeral on the whole screen, and only if it carries meaning.
+- **Forms:** labels above inputs (13px, weight 500), helper text 12px in `text-muted`, input height 36px, border `line-strong`, focus ring 2px `accent` with 2px offset. Errors appear inline under the field in `danger` and say exactly what is wrong and how to fix it.
+- **Switch:** 36x20, "on" track uses `accent`.
+- **Segmented control:** for 2 to 4 mutually exclusive options (assistant style, motion, quality, log filters).
+- **Icons:** one set only (Lucide), 16px in lists, 18px in navigation, stroke 1.5px, `currentColor`. No icons inside tinted rounded squares. No emoji anywhere.
+- **Tooltips:** 12px, `panel-raised` background, 1px `line-strong` border, 300ms delay, keyboard-reachable.
+- **Feedback:** confirm next to the control that caused it ("Changes saved" beside the Save button). Use a single toast only when there is no natural place, at the bottom-left of the content panel, 3 seconds, no animated icon.
+- **Loading:** static skeleton blocks in `panel-raised`. No shimmer sweeps.
+- **Disabled or not-yet-built features:** visibly disabled with a one-line reason, never a dead click.
+
+### 3.7 Motion
+
+- UI transitions: 120 to 160ms, color and opacity only, `cubic-bezier(0.2, 0, 0, 1)`. Panels: 200ms, 16px slide plus fade.
+- Allowed cinematic moments: the **interplanetary travel** (Section 6) and the **login intro**. Both are skippable.
+- Not allowed: fade-and-slide-up on every section, staggered reveals on load, hover lift or scale on rows or buttons, pulsing or breathing glows, looping ambient animation on UI chrome, typing effects, fake terminal text, scanlines. The planet's idle rotation and the starfield belong to the scene, not the chrome.
+
+### 3.8 Copy and mock data
+
+- Name sections by function, with the planet as secondary information. Navigation labels: Dashboard, Modules, Services, Activity, Account, Explore. The planet name appears in the tooltip and the scene caption.
+- Plain active voice, sentence case, no exclamation marks, no marketing language, no space puns ("Commander", "Launch your journey").
+- Buttons say exactly what happens: "Save changes", "Discard", "Enable module". The feedback reuses the same verb: "Changes saved".
+- Empty and error states give direction: "No activity matches these filters. Clear filters." / "Couldn't save. Check interval must be between 1 and 60 seconds."
+- Mock data must look real: plausible server names, module names, Minecraft Java 1.21.x versions, irregular numbers, ISO dates relative to today's date (October 2026). No Lorem ipsum, no "Service 1", no John Doe or Acme, no round marketing figures such as 1,234 users or 99.9% uptime.
+- Show "Demo data" once, as a small label in the sidebar footer. Do not stamp it on every screen.
+- Keep all UI strings in a single constants file so they can be translated to Vietnamese later.
+
+### 3.9 Banned list
+
+Do not use any of the following in the UI chrome (the 3D scene shaders are the only exception, see 3.10):
+
+- **Color and surface:** purple, indigo, violet, fuchsia, neon cyan or teal, magenta; blue-to-purple gradients; any `linear-gradient` or `radial-gradient` on buttons, panels, text, borders, or backgrounds; colored `box-shadow`, glow, neon borders; glassmorphism (`backdrop-filter`, blurred translucent panels); Tailwind default palette names; pure black and pure white.
+- **Layout:** grids of identical rounded cards; icon-in-tinted-square tiles; stat cards with big number and delta arrow; bento grids; a centered hero with headline, subtitle, and two buttons; pill badges everywhere; sticky blurred headers; `rounded-2xl` or larger.
+- **Type:** Inter, Roboto, Arial, Poppins, Space Grotesk, sci-fi fonts; all-caps tracked eyebrow labels; "01 / 02 / 03" numbering on content that is not a sequence; a monospace font for ordinary labels; a "→" appended to button or link text.
+- **Effects:** fade-up on every element, hover scale or translate, shimmer skeletons, particle backgrounds on the UI, HUD corner brackets, lens flares, bloom outside the planetary atmosphere.
+- **Assets and copy:** emoji, sparkle icons, "Powered by AI" language, stock gradient avatars, invented statistics, placeholder personas.
+
+### 3.10 Mechanical design audit (run before declaring the work finished)
+
+1. Search the codebase for: `gradient`, `backdrop-filter`, `blur(`, `box-shadow`, `text-shadow`, `drop-shadow`, `rounded-2xl`, `rounded-3xl`, `indigo`, `violet`, `purple`, `fuchsia`, `cyan`, `#6366f1`, `#8b5cf6`, `Inter`, `Roboto`, `Orbitron`, `animate-pulse`, `✨`. Every remaining hit must be inside a 3D shader or documented in `DESIGN.md` with a reason. Remove the rest.
+2. Confirm no raw hex values exist outside the token file.
+3. Take screenshots at 1440x900 and 390x844 if the environment allows it, and critique them against 3.1 to 3.9. List what you fixed.
+4. Apply the "remove one accessory" rule: remove at least one decorative element that does not serve the task.
+5. Check contrast of `text-muted` and `text-faint` on `panel`, and confirm a visible focus ring on every interactive element.
+
+## 4. 3D VISUAL DIRECTION
+
+Premium, realistic, cinematic. The UI chrome from Section 3 stays flat and quiet so the planets carry the visual richness.
+
+Do:
+- Real planetary textures, atmospheric scattering, directional sunlight, subtle shadows.
+- Deep space with stars of varying size and brightness; restrained blue-white highlights.
+- Clear typography and carefully controlled contrast; smooth, deliberate motion.
+
+Do not:
+- Cartoon planets, obviously AI-generated textures, or fake 3D made by scaling flat images.
+- Bloom, lens flare, or glow around planets beyond a physically plausible thin atmosphere.
+- A game HUD aesthetic of any kind.
+
+### Texture sources and fallbacks
+
+- Use **Solar System Scope** textures (based on NASA data, licensed CC BY 4.0, free for commercial use with attribution). Add a credits line in Account: "Planet textures: Solar System Scope, CC BY 4.0, based on NASA imagery. Positions: Astronomy Engine, MIT."
+- Expected files in `/public/textures/` (rename downloads to match, convert TIFF to JPG or WebP because browsers cannot load TIFF): `earth-day`, `earth-night`, `earth-clouds`, `earth-normal`, `earth-specular`, `mercury`, `venus`, `mars`, `jupiter`, `saturn`, `saturn-ring` (PNG with alpha), `uranus`, `neptune`, `sun`, `stars`. Use 2k for mobile and Balanced quality, 4k for Earth only on High quality.
+- Put the texture base path in one constant (`TEXTURE_BASE_URL`) so it can point to local files or a CDN. Do not hotlink random image hosts.
+- **The app must run without any texture file.** If a texture fails, fall back to a plain sphere with a mean albedo color and correct lighting (not a cartoon gradient), log it once, and show "Textures: 3 of 15 loaded" in Account > Diagnostics. Never show a broken screen.
+
+## 5. HOME SCREEN: EARTH
+
+A large, realistic 3D Earth against deep space.
+
+- Genuine 3D sphere with correct UV mapping. Day map, night lights on the dark side, cloud layer with slightly faster rotation, ocean specular, normal or bump map, axial tilt of about 23.4 degrees.
+- Slow continuous idle rotation (one revolution in roughly 240 seconds, a visual choice, not real time).
+- Thin blue atmospheric rim (Fresnel-based), soft night-side terminator, restrained shading.
+- Star field with varied distances and brightness. Cap the star count by quality level. No twinkle flicker.
+- **Lighting composition rule:** derive the Sun direction from the ephemeris. Place the display camera at a presentation phase angle of 55 to 70 degrees off the Sun–planet line so that roughly 65 to 80% of the visible disk is lit and the terminator is visible. Treat the phase angle as a documented presentation constant, and compute camera placement from the Sun direction, not the reverse. Apply the same rule to every planet.
+- The camera is **fixed** during ordinary viewing. No free orbit, no drag-rotate, no free-flight, no zoom wheel.
+- Earth stays visually dominant without hiding the navigation or the content panel.
+
+### Login and intro
+
+Frontend-only login consistent with the space theme.
+
+- Layout: a 360px left-aligned column with the key panel; the Earth fills the right and lower area and is cropped by the viewport (a large limb), not a centered orb with a card in front. On mobile: Earth in the top 40%, panel below.
+- Key format `BON-XXXX-XXXX-XXXX`: uppercase and auto-hyphenate as the user types, validate format with specific inline messages.
+- Demo behavior: accept the documented value `BON-DEMO-2026-0000`, and provide a clearly labeled secondary button "Continue with demo key" that fills it. Add one muted line: "Demo only. This does not validate a real key and provides no security."
+- After login: a short intro (about 3 to 4 seconds, no text, slow push-in from deep space to Earth, Skip button visible), then reveal the Earth home screen, then the assistant greets once. Reduced motion: replace the intro with a 300ms fade.
+
+## 6. CORE REQUIREMENT: CINEMATIC INTERPLANETARY NAVIGATION
+
+When the user selects a planet from the sidebar, bottom nav, or Explore, perform a cinematic transition instead of swapping content. The impression: traveling through space toward the destination.
+
+### 6.1 Sequence
+
+1. Capture the current scene and the destination.
+2. Start a smooth camera transition toward the destination.
+3. Adjust camera distance and field of view dynamically for a good composition.
+4. Increase apparent star movement with speed.
+5. Apply subtle directional light streaks or motion blur at higher speed.
+6. Scale the transition to the destination's relative distance in the visualization.
+7. Slow down as the destination approaches.
+8. Restore a sharp, detailed planet.
+9. Reveal the destination's content panel.
+10. Update the active navigation item and page state only at an appropriate point of the transition, so the UI never shows an inconsistent intermediate state.
+
+No blank frame, no page reload, no teleporting between unrelated static images.
+
+### 6.2 Adaptive travel speed
+
+Duration and intensity depend on destination distance, using a **nonlinear, bounded** curve, never a direct distance-to-seconds mapping. Earth to Neptune must not take impractically long.
+
+Suggested starting values (tune by eye):
+- Duration = clamp(1.2 + 0.8 · ln(1 + Δ), 1.2, 3.4) seconds, where Δ is the display-space distance in Earth-to-Mars units.
+- Field of view: base 35 degrees, rises up to about +10 degrees at mid-travel, returns to base on arrival.
+- Star streak length at peak: up to about 6 times the idle length, scaled by Δ and capped.
+- Position easing: ease-in-out cubic. Streaks, blur, and FOV follow a sine envelope that is zero at start and end.
+- Near: gentle, moderate zoom. Medium: stronger acceleration, visible star movement. Far: faster travel, longer but controlled streaks, a wider change in camera distance.
+- Do not simulate physical spacecraft travel time.
+
+### 6.3 Adaptive camera zoom (CRITICAL)
+
+Zoom out or in during travel so the destination ends at a useful, legible size and the journey keeps spatial continuity.
+
+- Compute the final camera distance from the destination's **rendered bounding sphere**, the **free-area aspect ratio** (Section 3.5), and the camera FOV: `distance = R / (fill · sin(min(vFov, hFov) / 2))`, with `fill` between 0.55 and 0.65.
+- Saturn is framed with the **ring outer radius** as R. Other planets use their rendered radius.
+- Smooth distance changes only, no snapping. Keep the destination visible during the approach.
+- No clipping at viewport edges, no absurdly tiny or oversized planets, no perspective jumps that look like a camera bug.
+- Respect the difference between physical radius and display scale.
+- Handle desktop, tablet, and mobile dimensions.
+- Keep UI overlays outside the 3D camera transform so navigation and panels never zoom with the world.
+- Coordinate camera position, camera target, and FOV. No arbitrary user-controlled rotation or free exploration.
+
+### 6.4 Star trails and motion effects
+
+- Directional streaks **aligned with the travel direction** (not random directions), with speed-dependent length, opacity, and density.
+- Smooth acceleration and deceleration. Optional very subtle space dust.
+- Subtle motion blur only where supported and affordable. Reduce or disable on weak devices.
+- No excessive bloom, flashing, noisy particles, or arcade feel.
+
+### 6.5 Arrival
+
+- Streaks shorten gradually, blur fades out, planetary detail becomes crisp.
+- Transition smoothly into the idle rotation. Reveal the content panel with the restrained 200ms panel motion.
+- Preserve the selected destination and navigation state.
+- **Skip travel** control visible during the transition (Esc also skips). Skipping reaches the same final scene and UI state immediately and leaves no animation or render loop running.
+- If another destination is chosen mid-transition: cancel and cleanly replace the current transition (deterministic, no overlapping camera animations).
+
+## 7. SOLAR SYSTEM DATA
+
+Represent the Sun and the eight planets in correct order from the Sun.
+
+- Use real astronomical data. Prefer `astronomy-engine` (MIT, runs offline in the browser, accurate to about one arcminute) with `HelioVector` for heliocentric positions at a fixed simulation timestamp stored in config. If it cannot be used, use a documented deterministic approximation (orbital elements with Kepler's equation) rather than fabricated precision.
+- Never reposition planets randomly or on tab change. Do not depend on an external API at runtime.
+- Keep four concepts separate in code and data: **physical radius** (km), **astronomical position** (AU), **display radius**, **display position**. A pure, documented function maps physical to display values consistently. Example only: `displayRadius = (radiusKm / 6371) ** 0.45` and `displayDistance = 40 · AU ** 0.6`. Any monotonic compression is fine if it is documented and applied consistently.
+- The data layer must keep correct physical relationships (Earth, Mars, Jupiter, and so on) even when display sizes are compressed. Do not claim the scene is to physical scale. Show a small note in Explore: "Sizes and distances are compressed for readability."
+- Distinct physical appearance and material per body: Earth with oceans and clouds, Mars dusty and matte, Jupiter and Saturn banded with no solid surface specular, Saturn's rings with an alpha texture and ring shadow on the globe where feasible, Venus a dense bright atmosphere, Uranus and Neptune pale smooth blue-green and deep blue. Avoid identical materials for every planet.
+- Provide an Explore view listing all destinations. Planets are selectable through the UI, never by moving a free camera.
+
+## 8. LIGHTING AND SHADOWS
+
+- Directional sunlight from the Sun position; correctly oriented lit and dark hemispheres; no unrelated fill light that makes every side equally lit.
+- Atmospheric scattering where suitable (Earth, Venus, subtle on the gas giants).
+- Normal or bump maps where good assets exist. Specular only where physically appropriate (Earth's oceans).
+- Keep shader and shadow complexity appropriate for real-time browsers.
+
+## 9. NAVIGATION
+
+Treat the mapping as configurable data, not hard-coded logic. Each destination has a stable id, display name, planet reference, icon, and view component.
+
+| Destination | Planet | Screen |
+|---|---|---|
+| Dashboard | Earth | Home |
+| Modules | Mars | Module catalogue |
+| Services | Jupiter | Registered services |
+| Activity | Saturn | Event log |
+| Account | Neptune | Account and settings |
+| Explore | none | Planet destination list |
+
+Do not invent meaningless extra destinations. A destination without content shows a deliberate placeholder state.
+
+### Desktop sidebar
+
+Collapsible, fixed widths (232 expanded, 56 collapsed). Expanded: Lucide icon plus text label, a 2px `accent` marker on the active item, subtle hover and focus. Collapsed: icons only with tooltips. Expanding or collapsing eases the camera view offset (Section 3.5) with no jump. No clipped or inaccessible controls.
+
+### Mobile
+
+Bottom navigation with 5 items plus Explore reachable from the Dashboard. Comfortable touch targets, support portrait and landscape, recalculate framing on viewport changes, and do not cover important planetary content.
+
+Everything must be usable by keyboard.
+
+## 10. FUNCTIONAL DEMO SCREENS
+
+All screens live in the single content panel and follow Section 3.6. All data is mock and clearly treated as mock. Every visible control performs a meaningful frontend action or is visibly disabled with a reason. No real server operations. Never show real secrets or credentials in sample logs.
+
+**Dashboard (Earth)**
+- A short welcome line (no marketing tone).
+- Account summary as a definition list (plan, key status, expiry).
+- Service status rows with status dots.
+- Recent activity (5 rows) with a "View all" link to Activity.
+- Shortcuts to Modules and Services as plain text links.
+
+**Modules (Mars)**
+- List of modules: name, short description, status, compatibility (for example "Java 1.21.x").
+- Selecting a module replaces the list with its detail view (back link "Modules"), no nested modal.
+- Detail: configuration form with realistic fields (such as check interval in seconds, alert radius in blocks, notification channel), a switch to enable or disable, **Save changes** (disabled until the form is changed) and **Discard**, with inline feedback.
+
+**Services (Jupiter)**
+- Registered services with Active, Inactive, and Expired states, expiry dates, and details.
+- Mock actions: Configure, Renew (disabled with a reason if not implemented), Pause.
+
+**Activity (Saturn)**
+- Filterable event list (segmented filter All, Success, Warning, Error, plus a text search).
+- Timestamps in tabular numbers, messages in plain language, log-style IDs in the mono face.
+- Real loading state (about 600ms static skeleton on first open) and a real empty state with "Clear filters".
+
+**Account (Neptune)**
+- Mock account information; masked key display (for example `BON-DEMO-••••-0000`), read-only.
+- Preferences as segmented controls: Assistant style (Smooth, Pixel), Motion (System, Reduced, Full), Quality (Auto, High, Balanced, Low).
+- Diagnostics (texture load count, WebGL status) and the credits line.
+
+**Explore**
+- One row per planet: a 40px thumbnail, name, one-line description, and a "Go" action. Generate thumbnails by rendering each planet once to a small canvas with the shared renderer, or use static 96px images. Selecting triggers the same travel system as all other navigation.
+
+## 11. AI ASSISTANT
+
+Reuse the existing animations if they exist (Section 2). Otherwise use the adapter and placeholder.
+
+- Placement: bottom-right of the **scene area** on desktop (never over the content panel); above the bottom nav on mobile.
+- On successful demo login show one brief greeting, then wait quietly. It never repeats the greeting on navigation.
+- The user can open and minimize it with an accessible control. It must not block buttons, navigation, or the planet.
+- Style (Smooth or Pixel) changes only through the setting, never automatically. Reuse existing expression states if present.
+- Chat uses predefined demo responses. No real AI API, no API keys.
+
+## 12. PERFORMANCE AND RENDERING ARCHITECTURE
+
+- One renderer and one active scene. No separate continuous renderer per planet. Keep scene graph and astronomical data separate from UI components.
+- Reuse geometries and materials; avoid per-frame allocations. Lazy-load nonessential textures and screens, and prefetch the neighbors of the active planet during idle time.
+- Texture resolution by quality level. Handle texture load failures gracefully (Section 4).
+- Dispose geometries, materials, textures, render targets, and listeners when no longer needed. Pause the loop when the tab is hidden or the scene is inactive. Use `requestAnimationFrame`.
+- Handle resize, orientation change, and device pixel ratio (cap DPR at 2, lower on weak mobile).
+- Provide a useful static 2D fallback if WebGL is unavailable (planet image plus the full working UI).
+- Progressive quality: High for capable desktops, Balanced for average hardware, Reduced effects and texture size for weak mobile. Avoid uncontrolled particle counts and heavy post-processing.
+- Do not claim performance is optimized without testing it.
+
+## 13. ACCESSIBILITY AND MOTION CONTROL
+
+- A setting for Reduced motion, plus respect for `prefers-reduced-motion`. When active: minimal camera travel, no streaks or blur, long transitions replaced by short fades or direct navigation, all functionality preserved.
+- Visible focus states, readable contrast, semantic controls, full keyboard navigation, `aria-live` for the transition state and for save feedback.
+
+## 14. IMPLEMENTATION QUALITY
+
+Keep these concerns in separate modules: planetary scene and rendering; astronomical data; camera and travel controller; navigation state; per-planet content views; sidebar and mobile navigation; assistant integration; mock data; settings and accessibility; design tokens.
+
+- Data-driven configuration and navigation metadata. No planet-specific camera logic scattered through unrelated components. One implementation of the transition.
+- Handle loading, errors, empty states, and interrupted transitions deliberately.
+- Use the existing package manager and conventions. Avoid unnecessary dependencies.
+- Keep the design tokens in a single file that is the only place raw color values appear.
+
+## 15. DEMO PRIORITIES
+
+1. Working navigation and a restrained, professional UI (Section 3).
+2. Realistic planetary rendering.
+3. Smooth cinematic travel with adaptive zoom.
+4. Responsive layout and performance.
+5. Assistant integration.
+6. Optional details and effects (last, and cut first if time or size is tight).
+
+## 16. TESTING AND ACCEPTANCE CRITERIA
+
+Run the build, type checks, lint, and tests the project supports. Launch the app and verify:
+
+1. Demo login leads to the intro and then Earth, with the documented demo key.
+2. Earth is a genuine textured 3D sphere with day/night, clouds, and atmosphere.
+3. Destinations work from the sidebar, mobile nav, and Explore.
+4. Switching destinations triggers a smooth cinematic transition, and its intensity scales with distance within the bounds in 6.2.
+5. Camera zoom adjusts during travel and frames the destination correctly on arrival (including Saturn's rings) in the free area, not behind the panel.
+6. Star streaks align with the travel direction and disappear smoothly on arrival.
+7. Skip travel and Esc reach the correct final state with no leftover loops. Repeated or interrupted navigation leaves no broken animation.
+8. Lighting direction matches the simulated Sun on every planet.
+9. Planet positions come from `astronomy-engine` or the documented approximation.
+10. Sidebar and panel changes ease the planet without jumping.
+11. Mobile layout is usable at 390x844 and in landscape, with no horizontal scroll.
+12. Smooth and Pixel assistant styles both work, and the greeting does not repeat.
+13. Modules, Services, Activity, and Account have working demo interactions, including the empty, loading, dirty-form, and error states.
+14. Reduced motion works.
+15. Missing textures, resizing, and WebGL failure are handled gracefully.
+16. **Design audit (3.10) passes: no banned patterns remain, tokens are the only color source, focus rings are visible, contrast targets are met.**
+17. No real backend, database, authentication, or server-security system was added.
+
+Fix errors instead of merely documenting them.
+
+If a requirement cannot be fully completed, state exactly what is missing, what was implemented, and what blocks completion. Do not falsely report a successful build or a working feature.
+
+## 17. FINAL DELIVERABLE
+
+A working frontend demo. At completion provide:
+
+- A concise list of implemented features.
+- The main files and components created or modified, including `DESIGN.md`.
+- The exact commands to run the demo.
+- Build and test results, and the design audit results (which search hits remained and why).
+- External assets and dependencies added, plus the texture placement instructions.
+- Known limitations and incomplete requirements.
+
+Build the real working demo, not just a plan or a static screenshot.
